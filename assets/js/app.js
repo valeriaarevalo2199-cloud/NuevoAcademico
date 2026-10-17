@@ -127,6 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // INICIO DE SESIÓN
+ 
+  // INICIO DE SESIÓN
   if (formLogin) {
     formLogin.addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -140,14 +142,69 @@ document.addEventListener("DOMContentLoaded", () => {
       const clave = formLogin.elements["password"].value;
 
       try {
-        const { error } = await supabaseClient.auth.signInWithPassword({
-          email: correo,
-          password: clave
-        });
+        // 1. Autenticar al usuario
+        const { data: loginData, error: loginError } =
+          await supabaseClient.auth.signInWithPassword({
+            email: correo,
+            password: clave
+          });
 
-        if (error) throw error;
+        if (loginError) throw loginError;
 
-        window.location.href = "panel-estudiante.html";
+        const usuario = loginData.user;
+
+        if (!usuario) {
+          throw new Error("No se pudo identificar al usuario.");
+        }
+
+        // 2. Consultar su rol en el perfil
+        const { data: perfil, error: perfilError } =
+          await supabaseClient
+            .from("perfiles")
+            .select("rol")
+            .eq("id", usuario.id)
+            .maybeSingle();
+
+        if (perfilError) {
+          console.error("Error consultando el perfil:", perfilError);
+          mostrarMensaje(
+            "Iniciaste sesión, pero no pudimos verificar tu rol. Revisa los permisos del perfil en Supabase.",
+            "warning"
+          );
+          return;
+        }
+
+        if (!perfil) {
+          mostrarMensaje(
+            "Tu cuenta no tiene un perfil académico registrado. Contacta al administrador.",
+            "warning"
+          );
+          return;
+        }
+
+        // 3. Redirigir según el rol registrado
+        switch (perfil.rol) {
+          case "administrador":
+            window.location.href = "administracion.html";
+            break;
+
+          case "estudiante":
+            window.location.href = "panel-estudiante.html";
+            break;
+
+          case "funcionario":
+            mostrarMensaje(
+              "Tu cuenta es de funcionario. El módulo correspondiente aún está en construcción.",
+              "info"
+            );
+            break;
+
+          default:
+            mostrarMensaje(
+              "Tu cuenta tiene un rol no reconocido. Contacta al administrador.",
+              "warning"
+            );
+        }
       } catch (error) {
         console.error("Error al iniciar sesión:", error);
         mostrarMensaje(mensajeError(error), "danger");
@@ -156,43 +213,3 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
-  // RECUPERACIÓN DE CONTRASEÑA
-  if (formRecuperar) {
-    formRecuperar.addEventListener("submit", async (evento) => {
-      evento.preventDefault();
-      limpiarMensaje();
-
-      if (!formRecuperar.reportValidity()) return;
-
-      bloquearFormulario(formRecuperar, true);
-
-      const correo = formRecuperar.elements["correo"].value.trim();
-
-      try {
-        const { error } =
-          await supabaseClient.auth.resetPasswordForEmail(correo, {
-            redirectTo:
-              "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/"
-          });
-
-        if (error) throw error;
-
-        mostrarMensaje(
-          "Si existe una cuenta para ese correo, recibirás instrucciones. Revisa también la carpeta de spam.",
-          "success"
-        );
-
-        formRecuperar.reset();
-      } catch (error) {
-        console.error("Error al solicitar recuperación:", error);
-        mostrarMensaje(
-          "No pudimos solicitar la recuperación. Inténtalo nuevamente más tarde.",
-          "danger"
-        );
-      } finally {
-        bloquearFormulario(formRecuperar, false);
-      }
-    });
-  }
-});
