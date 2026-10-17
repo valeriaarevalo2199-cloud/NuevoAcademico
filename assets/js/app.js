@@ -1,11 +1,14 @@
 
-const supabaseClient = window.supabaseClient;
-
 document.addEventListener("DOMContentLoaded", () => {
+  const supabaseClient = window.supabaseClient;
+
   const formRegistro = document.getElementById("formRegistro");
   const formLogin = document.getElementById("formLogin");
+  const formRecuperar = document.getElementById("formRecuperar");
+
   const mensajeAuth = document.getElementById("mensajeAuth");
-  const authOverlay = document.getElementById("authOverlay");
+  const claveRegistro = document.getElementById("claveRegistro");
+  const confirmarClave = document.getElementById("confirmarClave");
 
   function mostrarMensaje(mensaje, tipo = "success") {
     if (!mensajeAuth) return;
@@ -14,21 +17,20 @@ document.addEventListener("DOMContentLoaded", () => {
     mensajeAuth.className = `alert alert-${tipo}`;
     mensajeAuth.classList.remove("d-none");
     mensajeAuth.setAttribute("role", "status");
+    mensajeAuth.setAttribute("aria-live", "polite");
   }
 
   function limpiarMensaje() {
     if (!mensajeAuth) return;
 
     mensajeAuth.textContent = "";
-    mensajeAuth.className = "d-none";
+    mensajeAuth.className = "alert d-none";
   }
 
   function bloquearFormulario(formulario, bloquear) {
-    const botones = formulario.querySelectorAll(
-      'button[type="submit"], input[type="submit"]'
-    );
+    if (!formulario) return;
 
-    botones.forEach((boton) => {
+    formulario.querySelectorAll('button[type="submit"]').forEach((boton) => {
       boton.disabled = bloquear;
     });
   }
@@ -40,9 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
       "Invalid login credentials":
         "El correo o la contraseña son incorrectos.",
       "Email not confirmed":
-        "Debes confirmar tu correo electrónico antes de iniciar sesión.",
+        "Confirma tu correo electrónico antes de iniciar sesión.",
       "Password should be at least 6 characters":
-        "La contraseña no cumple la longitud mínima."
+        "La contraseña debe tener al menos 6 caracteres."
     };
 
     return errores[error?.message] ||
@@ -51,17 +53,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!supabaseClient) {
     mostrarMensaje(
-      "No se pudo conectar con el servicio. Recarga la página e inténtalo nuevamente.",
+      "No se pudo conectar con Supabase. Recarga la página e inténtalo nuevamente.",
       "danger"
     );
     return;
   }
+
+  // VALIDACIÓN DE CONFIRMACIÓN DE CONTRASEÑA
+  function validarConfirmacion() {
+    if (!claveRegistro || !confirmarClave) return;
+
+    confirmarClave.setCustomValidity(
+      confirmarClave.value === claveRegistro.value
+        ? ""
+        : "Las contraseñas no coinciden."
+    );
+  }
+
+  claveRegistro?.addEventListener("input", validarConfirmacion);
+  confirmarClave?.addEventListener("input", validarConfirmacion);
 
   // REGISTRO
   if (formRegistro) {
     formRegistro.addEventListener("submit", async (evento) => {
       evento.preventDefault();
       limpiarMensaje();
+
+      validarConfirmacion();
+
+      if (!formRegistro.reportValidity()) return;
+
       bloquearFormulario(formRegistro, true);
 
       const nombres = formRegistro.elements["nombres"].value.trim();
@@ -69,21 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const correo = formRegistro.elements["correo"].value.trim();
       const clave = formRegistro.elements["password"].value;
 
-      if (!nombres || !apellidos || !correo || !clave) {
-        mostrarMensaje("Completa todos los campos.", "warning");
-        bloquearFormulario(formRegistro, false);
-        return;
-      }
-
       try {
         const { data, error } = await supabaseClient.auth.signUp({
           email: correo,
           password: clave,
           options: {
-            data: {
-              nombres,
-              apellidos
-            },
+            data: { nombres, apellidos },
             emailRedirectTo:
               "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/"
           }
@@ -93,17 +105,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.session) {
           mostrarMensaje(
-            "¡Tu cuenta fue creada correctamente! Ya puedes comenzar.",
+            "Tu cuenta fue creada. Ya puedes iniciar sesión.",
             "success"
           );
         } else {
           mostrarMensaje(
-            "Tu registro fue recibido. Revisa tu correo y confirma la cuenta antes de iniciar sesión.",
+            "Registro recibido. Revisa tu correo y confirma tu cuenta antes de iniciar sesión.",
             "success"
           );
         }
 
         formRegistro.reset();
+        confirmarClave?.setCustomValidity("");
       } catch (error) {
         console.error("Error en el registro:", error);
         mostrarMensaje(mensajeError(error), "danger");
@@ -118,35 +131,23 @@ document.addEventListener("DOMContentLoaded", () => {
     formLogin.addEventListener("submit", async (evento) => {
       evento.preventDefault();
       limpiarMensaje();
+
+      if (!formLogin.reportValidity()) return;
+
       bloquearFormulario(formLogin, true);
 
       const correo = formLogin.elements["correo"].value.trim();
       const clave = formLogin.elements["password"].value;
 
-      if (!correo || !clave) {
-        mostrarMensaje(
-          "Escribe tu correo y contraseña.",
-          "warning"
-        );
-        bloquearFormulario(formLogin, false);
-        return;
-      }
-
       try {
-        const { data, error } =
-          await supabaseClient.auth.signInWithPassword({
-            email: correo,
-            password: clave
-          });
+        const { error } = await supabaseClient.auth.signInWithPassword({
+          email: correo,
+          password: clave
+        });
 
         if (error) throw error;
 
-        mostrarMensaje(
-          `¡Bienvenido${data.user?.email ? `, ${data.user.email}` : ""}! Has iniciado sesión correctamente.`,
-          "success"
-        );
-
-        formLogin.reset();
+        window.location.href = "panel-estudiante.html";
       } catch (error) {
         console.error("Error al iniciar sesión:", error);
         mostrarMensaje(mensajeError(error), "danger");
@@ -156,44 +157,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Mantener el mensaje accesible y visible en el modal.
-  
-  // RECUPERAR CONTRASEÑA
-  const btnRecuperarClave = document.getElementById("btnRecuperarClave");
-
-  if (btnRecuperarClave) {
-    btnRecuperarClave.addEventListener("click", async () => {
+  // RECUPERACIÓN DE CONTRASEÑA
+  if (formRecuperar) {
+    formRecuperar.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
       limpiarMensaje();
 
-      const correoInput = formLogin?.elements["correo"];
-      const correo = correoInput?.value.trim();
+      if (!formRecuperar.reportValidity()) return;
 
-      if (!correo) {
-        mostrarMensaje(
-          "Escribe tu correo electrónico en el campo de inicio de sesión y vuelve a pulsar «¿Olvidaste tu contraseña?».",
-          "warning"
-        );
-        correoInput?.focus();
-        return;
-      }
+      bloquearFormulario(formRecuperar, true);
 
-      btnRecuperarClave.disabled = true;
+      const correo = formRecuperar.elements["correo"].value.trim();
 
       try {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(
-          correo,
-          {
+        const { error } =
+          await supabaseClient.auth.resetPasswordForEmail(correo, {
             redirectTo:
               "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/"
-          }
-        );
+          });
 
         if (error) throw error;
 
         mostrarMensaje(
-          "Si existe una cuenta para ese correo, recibirás instrucciones para recuperar el acceso. Revisa también la carpeta de spam.",
+          "Si existe una cuenta para ese correo, recibirás instrucciones. Revisa también la carpeta de spam.",
           "success"
         );
+
+        formRecuperar.reset();
       } catch (error) {
         console.error("Error al solicitar recuperación:", error);
         mostrarMensaje(
@@ -201,15 +191,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "danger"
         );
       } finally {
-        btnRecuperarClave.disabled = false;
+        bloquearFormulario(formRecuperar, false);
       }
-    });
-  }
-
-  if (authOverlay && mensajeAuth) {
-    authOverlay.addEventListener("click", () => {
-      // El mensaje se conserva hasta que el usuario cambie de formulario
-      // o vuelva a enviar uno de los formularios.
     });
   }
 });
