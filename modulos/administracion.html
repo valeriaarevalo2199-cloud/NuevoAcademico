@@ -4,251 +4,445 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d6efd">
+  <meta name="description" content="Panel administrativo de Académico Fácil para consultar solicitudes académicas.">
   <title>Administración | Académico Fácil</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
-<body class="bg-light">
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <style>
+    body {
+      min-height: 100vh;
+      background: #f5f7fb;
+    }
+
+    .navbar-brand {
+      letter-spacing: -0.4px;
+    }
+
+    .admin-hero {
+      background: linear-gradient(135deg, #0d6efd, #084298);
+      color: #fff;
+      border-radius: 1rem;
+      padding: 1.75rem;
+      box-shadow: 0 8px 24px rgba(13, 110, 253, .12);
+    }
+
+    .metric-card {
+      border: 0;
+      border-radius: 1rem;
+      box-shadow: 0 4px 18px rgba(30, 50, 80, .06);
+      transition: transform .2s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .metric-label {
+      color: #64748b;
+      font-size: .9rem;
+      margin-bottom: .5rem;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 750;
+      margin: 0;
+      color: #172b4d;
+    }
+
+    .metric-icon {
+      display: inline-flex;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 1.25rem;
+      background: #eaf2ff;
+    }
+
+    .admin-section {
+      border: 0;
+      border-radius: 1rem;
+      box-shadow: 0 4px 18px rgba(30, 50, 80, .06);
+    }
+
+    .table thead th {
+      color: #475569;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .035em;
+      white-space: nowrap;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .table tbody td {
+      padding-top: .9rem;
+      padding-bottom: .9rem;
+    }
+
+    .estado-badge {
+      display: inline-block;
+      padding: .4rem .65rem;
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #334155;
+      font-size: .78rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .estado-recibida {
+      background: #cff4fc;
+      color: #055160;
+    }
+
+    .estado-en-revision {
+      background: #cfe2ff;
+      color: #084298;
+    }
+
+    .estado-pendiente {
+      background: #fff3cd;
+      color: #664d03;
+    }
+
+    .estado-resuelta,
+    .estado-cerrada {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .estado-rechazada {
+      background: #f8d7da;
+      color: #842029;
+    }
+
+    .table-empty {
+      padding: 2.5rem 1rem !important;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .footer-admin {
+      background: #fff;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    @media (max-width: 576px) {
+      .admin-hero {
+        padding: 1.25rem;
+      }
+
+      .metric-value {
+        font-size: 1.65rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="../index.html">Académico Fácil</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-        data-bs-target="#menuAdmin" aria-controls="menuAdmin"
-        aria-expanded="false" aria-label="Abrir menú">
+      <a class="navbar-brand fw-bold" href="../index.html">
+        Académico Fácil
+      </a>
+
+      <button class="navbar-toggler" type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#menuAdmin"
+        aria-controls="menuAdmin"
+        aria-expanded="false"
+        aria-label="Abrir menú">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="menuAdmin">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link active" href="administracion.html">Administración</a></li>
-          <li class="nav-item"><a class="nav-link" href="panel-estudiante.html">Panel estudiante</a></li>
-          <li class="nav-item"><a class="nav-link" href="../index.html">Inicio</a></li>
-          <li class="nav-item"><a class="btn btn-light text-dark" href="login.html">Salir de la vista</a></li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="administracion.html">
+              Administración
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-light text-primary fw-semibold"
+              id="btnCerrarSesion" type="button">
+              Cerrar sesión
+            </button>
+          </li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <main class="container py-4 py-md-5">
+  <main class="container py-4 py-lg-5">
 
-    <div class="alert alert-warning" role="alert">
-      <strong>Vista de demostración:</strong>
-      los datos son ficticios. Esta página no está protegida por roles todavía;
-      no debe utilizarse para gestionar información real.
-    </div>
+    <div id="mensajeAdmin"
+      class="alert d-none"
+      role="status"
+      aria-live="polite"></div>
 
-    <div class="mb-4">
-      <p class="text-primary fw-semibold mb-1">CENTRO DE CONTROL</p>
-      <h1 class="h2 fw-bold">Administración de solicitudes</h1>
-      <p class="text-secondary">
-        Consulta las solicitudes recibidas y revisa su estado.
-      </p>
-    </div>
+    <section class="admin-hero mb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <p class="text-uppercase fw-semibold small mb-2 opacity-75">
+            Centro de control
+          </p>
+          <h1 class="h2 fw-bold mb-2">Administración de solicitudes</h1>
+          <p class="mb-0 opacity-75">
+            Consulta y supervisa las solicitudes académicas registradas.
+          </p>
+        </div>
 
-    <section class="row g-3 mb-4" aria-label="Resumen administrativo">
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body">
-            <p class="text-secondary mb-1">Solicitudes recibidas</p>
-            <p class="display-5 fw-bold mb-0">8</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body">
-            <p class="text-secondary mb-1">En revisión</p>
-            <p class="display-5 fw-bold text-primary mb-0">3</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body">
-            <p class="text-secondary mb-1">Pendientes</p>
-            <p class="display-5 fw-bold text-warning mb-0">2</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body">
-            <p class="text-secondary mb-1">Resueltas</p>
-            <p class="display-5 fw-bold text-success mb-0">3</p>
-          </div>
-        </div>
+        <button id="btnActualizarAdmin"
+          class="btn btn-light text-primary fw-semibold flex-shrink-0"
+          type="button"
+          onclick="cargarDatosAdmin()">
+          ↻ Actualizar datos
+        </button>
       </div>
     </section>
 
-    <section class="card border-0 shadow-sm">
+    <section class="row g-3 mb-4" aria-label="Indicadores administrativos">
+
+      <div class="col-6 col-xl-3">
+        <div class="card metric-card h-100">
+          <div class="card-body p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <p class="metric-label mb-0">Total solicitudes</p>
+              <span class="metric-icon">📋</span>
+            </div>
+            <p class="metric-value" id="totalSolicitudesAdmin">—</p>
+            <small class="text-secondary">Registros consultados</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-xl-3">
+        <div class="card metric-card h-100">
+          <div class="card-body p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <p class="metric-label mb-0">Recibidas</p>
+              <span class="metric-icon">📥</span>
+            </div>
+            <p class="metric-value" id="recibidasAdmin">—</p>
+            <small class="text-secondary">Pendientes de revisión inicial</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-xl-3">
+        <div class="card metric-card h-100">
+          <div class="card-body p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <p class="metric-label mb-0">En revisión</p>
+              <span class="metric-icon">🔎</span>
+            </div>
+            <p class="metric-value" id="revisionAdmin">—</p>
+            <small class="text-secondary">En proceso de atención</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-xl-3">
+        <div class="card metric-card h-100">
+          <div class="card-body p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <p class="metric-label mb-0">Resueltas</p>
+              <span class="metric-icon">✓</span>
+            </div>
+            <p class="metric-value" id="resueltasAdmin">—</p>
+            <small class="text-secondary">Solicitudes resueltas</small>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="card admin-section">
       <div class="card-body p-3 p-md-4">
-        <h2 class="h5 fw-bold mb-3">Bandeja de solicitudes</h2>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+          <div>
+            <h2 class="h5 fw-bold mb-1">Bandeja de solicitudes</h2>
+            <p class="text-secondary small mb-0">
+              Consulta los registros y filtra los resultados.
+            </p>
+          </div>
+          <span class="badge rounded-pill text-bg-light border text-secondary py-2 px-3">
+            Registros: <span id="contadorAdmin">0</span>
+          </span>
+        </div>
 
         <div class="row g-3 mb-4">
-          <div class="col-md-6">
-            <label for="buscarAdmin" class="form-label">Buscar</label>
-            <input type="search" id="buscarAdmin" class="form-control"
-              placeholder="Radicado, asunto o estudiante">
+
+          <div class="col-lg-6">
+            <label for="buscarAdmin" class="form-label fw-semibold">
+              Buscar solicitud
+            </label>
+            <input type="search"
+              id="buscarAdmin"
+              class="form-control"
+              placeholder="Radicado, asunto, estudiante o correo"
+              autocomplete="off">
           </div>
-          <div class="col-md-4">
-            <label for="estadoAdmin" class="form-label">Filtrar por estado</label>
+
+          <div class="col-sm-8 col-lg-4">
+            <label for="estadoAdmin" class="form-label fw-semibold">
+              Estado
+            </label>
             <select id="estadoAdmin" class="form-select">
               <option value="">Todos los estados</option>
-              <option value="Recibida">Recibida</option>
-              <option value="En revisión">En revisión</option>
-              <option value="Pendiente de información">Pendiente de información</option>
-              <option value="Resuelta">Resuelta</option>
             </select>
           </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button id="limpiarAdmin" class="btn btn-outline-secondary w-100" type="button">
+
+          <div class="col-sm-4 col-lg-2 d-flex align-items-end">
+            <button id="limpiarAdmin"
+              class="btn btn-outline-primary w-100"
+              type="button">
               Limpiar
             </button>
           </div>
+
+        </div>
+
+        <div id="cargandoAdmin" class="text-center py-5 d-none">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="text-secondary mt-3 mb-0">
+            Consultando solicitudes...
+          </p>
         </div>
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
                 <th scope="col">Radicado</th>
-                <th scope="col">Estudiante (demo)</th>
+                <th scope="col">Estudiante</th>
+                <th scope="col">Categoría</th>
                 <th scope="col">Asunto</th>
-                <th scope="col">Fecha</th>
                 <th scope="col">Estado</th>
+                <th scope="col">Fecha</th>
               </tr>
             </thead>
-            <tbody id="tablaAdmin">
-              <tr data-estado="Recibida">
-                <td>AF-2026-000201</td>
-                <td>Estudiante Demo 1</td>
-                <td>Certificado académico</td>
-                <td>15/10/2026</td>
-                <td><span class="badge text-bg-info">Recibida</span></td>
-              </tr>
-              <tr data-estado="En revisión">
-                <td>AF-2026-000202</td>
-                <td>Estudiante Demo 2</td>
-                <td>Homologación</td>
-                <td>14/10/2026</td>
-                <td><span class="badge text-bg-primary">En revisión</span></td>
-              </tr>
-              <tr data-estado="Pendiente de información">
-                <td>AF-2026-000203</td>
-                <td>Estudiante Demo 3</td>
-                <td>Constancia de estudio</td>
-                <td>13/10/2026</td>
-                <td><span class="badge text-bg-warning">Pendiente de información</span></td>
-              </tr>
-              <tr data-estado="En revisión">
-                <td>AF-2026-000204</td>
-                <td>Estudiante Demo 4</td>
-                <td>Consulta de matrícula</td>
-                <td>12/10/2026</td>
-                <td><span class="badge text-bg-primary">En revisión</span></td>
-              </tr>
-              <tr data-estado="Resuelta">
-                <td>AF-2026-000205</td>
-                <td>Estudiante Demo 5</td>
-                <td>Soporte técnico</td>
-                <td>11/10/2026</td>
-                <td><span class="badge text-bg-success">Resuelta</span></td>
-              </tr>
-              <tr data-estado="Recibida">
-                <td>AF-2026-000206</td>
-                <td>Estudiante Demo 6</td>
-                <td>Consulta de asignaturas</td>
-                <td>10/10/2026</td>
-                <td><span class="badge text-bg-info">Recibida</span></td>
-              </tr>
-              <tr data-estado="Resuelta">
-                <td>AF-2026-000207</td>
-                <td>Estudiante Demo 7</td>
-                <td>Prácticas profesionales</td>
-                <td>09/10/2026</td>
-                <td><span class="badge text-bg-success">Resuelta</span></td>
-              </tr>
-              <tr data-estado="Resuelta">
-                <td>AF-2026-000208</td>
-                <td>Estudiante Demo 8</td>
-                <td>Bienestar universitario</td>
-                <td>08/10/2026</td>
-                <td><span class="badge text-bg-success">Resuelta</span></td>
+            <tbody id="tablaSolicitudesAdmin">
+              <tr>
+                <td colspan="6" class="table-empty">
+                  Preparando consulta de solicitudes...
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <p id="sinResultadosAdmin" class="alert alert-secondary d-none mb-0" role="status">
-          No se encontraron solicitudes.
+        <p id="sinResultadosAdmin"
+          class="alert alert-secondary d-none mt-3 mb-0"
+          role="status">
+          No se encontraron solicitudes con los filtros seleccionados.
         </p>
-        <p id="contadorAdmin" class="small text-secondary mb-0"></p>
+
       </div>
     </section>
 
-    <section class="card border-0 shadow-sm mt-4">
-      <div class="card-body p-4">
-        <h2 class="h5 fw-bold">Funciones administrativas previstas</h2>
-        <ul class="mb-0">
-          <li>Consultar solicitudes y su historial.</li>
-          <li>Asignar solicitudes al personal responsable.</li>
-          <li>Actualizar estados con trazabilidad.</li>
-          <li>Solicitar información adicional al estudiante.</li>
-          <li>Registrar respuestas y resolución del trámite.</li>
-          <li>Consultar indicadores y tiempos de atención.</li>
-        </ul>
+    <section class="card admin-section mt-4">
+      <div class="card-body p-3 p-md-4">
+        <h2 class="h6 fw-bold mb-3">Alcance del módulo</h2>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="d-flex gap-2">
+              <span>📊</span>
+              <div>
+                <p class="fw-semibold mb-1">Indicadores</p>
+                <p class="small text-secondary mb-0">
+                  Métricas calculadas con los registros consultados.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex gap-2">
+              <span>🔍</span>
+              <div>
+                <p class="fw-semibold mb-1">Consulta y búsqueda</p>
+                <p class="small text-secondary mb-0">
+                  Búsqueda por texto y filtros de estado.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex gap-2">
+              <span>🔐</span>
+              <div>
+                <p class="fw-semibold mb-1">Acceso controlado</p>
+                <p class="small text-secondary mb-0">
+                  Verificación de sesión, rol y políticas de Supabase.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         <p class="small text-secondary mt-3 mb-0">
-          Estas funciones son parte del diseño futuro y todavía no están habilitadas.
+          Por ahora, esta vista permite consultar. La edición de estados,
+          asignaciones y respuestas se habilitará en una etapa posterior.
         </p>
       </div>
     </section>
 
   </main>
 
-  <footer class="bg-white border-top py-3 mt-5">
-    <div class="container text-center text-secondary small">
-      Académico Fácil · Administración
+  <footer class="footer-admin py-4 mt-5">
+    <div class="container text-center">
+      <p class="fw-semibold mb-1">Académico Fácil</p>
+      <p class="text-secondary small mb-0">
+        Módulo de administración de solicitudes académicas
+      </p>
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/administracion.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    const buscarAdmin = document.getElementById("buscarAdmin");
-    const estadoAdmin = document.getElementById("estadoAdmin");
-    const filasAdmin = Array.from(document.querySelectorAll("#tablaAdmin tr"));
-    const sinResultadosAdmin = document.getElementById("sinResultadosAdmin");
-    const contadorAdmin = document.getElementById("contadorAdmin");
+    document.addEventListener("DOMContentLoaded", function () {
+      const busqueda = document.getElementById("buscarAdmin");
+      const estado = document.getElementById("estadoAdmin");
+      const limpiar = document.getElementById("limpiarAdmin");
 
-    function filtrarAdmin() {
-      const texto = buscarAdmin.value.trim().toLowerCase();
-      const estado = estadoAdmin.value;
-      let visibles = 0;
-
-      filasAdmin.forEach(function(fila) {
-        const coincideTexto = fila.textContent.toLowerCase().includes(texto);
-        const coincideEstado = !estado || fila.dataset.estado === estado;
-        const mostrar = coincideTexto && coincideEstado;
-
-        fila.classList.toggle("d-none", !mostrar);
-        if (mostrar) visibles++;
+      busqueda.addEventListener("input", function () {
+        if (typeof window.mostrarSolicitudesAdmin === "function") {
+          window.mostrarSolicitudesAdmin();
+        }
       });
 
-      sinResultadosAdmin.classList.toggle("d-none", visibles > 0);
-      contadorAdmin.textContent = "Registros encontrados: " + visibles;
-    }
+      estado.addEventListener("change", function () {
+        if (typeof window.mostrarSolicitudesAdmin === "function") {
+          window.mostrarSolicitudesAdmin();
+        }
+      });
 
-    buscarAdmin.addEventListener("input", filtrarAdmin);
-    estadoAdmin.addEventListener("change", filtrarAdmin);
+      limpiar.addEventListener("click", function () {
+        busqueda.value = "";
+        estado.value = "";
 
-    document.getElementById("limpiarAdmin").addEventListener("click", function() {
-      buscarAdmin.value = "";
-      estadoAdmin.value = "";
-      filtrarAdmin();
+        if (typeof window.mostrarSolicitudesAdmin === "function") {
+          window.mostrarSolicitudesAdmin();
+        }
+      });
     });
-
-    filtrarAdmin();
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
