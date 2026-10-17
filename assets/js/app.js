@@ -13,7 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const URL_PROYECTO =
     "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/";
 
-  // Mostrar mensajes al usuario
+  // ==========================================
+  // MENSAJES
+  // ==========================================
   function mostrarMensaje(mensaje, tipo = "success") {
     if (!mensajeAuth) return;
 
@@ -24,7 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
     mensajeAuth.setAttribute("aria-live", "polite");
   }
 
-  // Limpiar mensajes anteriores
   function limpiarMensaje() {
     if (!mensajeAuth) return;
 
@@ -32,7 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
     mensajeAuth.className = "alert d-none";
   }
 
-  // Evitar envíos repetidos
+  // ==========================================
+  // BLOQUEAR FORMULARIOS DURANTE EL ENVÍO
+  // ==========================================
   function bloquearFormulario(formulario, bloquear) {
     if (!formulario) return;
 
@@ -43,37 +46,33 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // Traducir errores frecuentes de Supabase
+  // ==========================================
+  // TRADUCCIÓN DE ERRORES
+  // ==========================================
   function mensajeError(error) {
-    const mensaje = error?.message || "";
+    const errores = {
+      "User already registered":
+        "Este correo ya tiene una cuenta. Intenta iniciar sesión.",
 
-    if (mensaje.includes("User already registered")) {
-      return "Este correo ya tiene una cuenta. Intenta iniciar sesión.";
-    }
+      "Invalid login credentials":
+        "El correo o la contraseña son incorrectos.",
 
-    if (mensaje.includes("Invalid login credentials")) {
-      return "El correo o la contraseña son incorrectos.";
-    }
+      "Email not confirmed":
+        "Confirma tu correo electrónico antes de iniciar sesión.",
 
-    if (mensaje.includes("Email not confirmed")) {
-      return "Confirma tu correo electrónico antes de iniciar sesión.";
-    }
-
-    if (mensaje.includes("Password should be at least")) {
-      return "La contraseña no cumple con la longitud mínima requerida.";
-    }
-
-    if (mensaje.includes("rate limit")) {
-      return "Has realizado demasiados intentos. Espera un momento y vuelve a intentarlo.";
-    }
+      "Password should be at least 6 characters":
+        "La contraseña debe tener al menos 6 caracteres."
+    };
 
     return (
-      "No fue posible completar la operación. " +
-      "Verifica los datos e inténtalo nuevamente."
+      errores[error?.message] ||
+      "No fue posible completar la operación. Verifica los datos e inténtalo nuevamente."
     );
   }
 
-  // Verificar conexión con Supabase
+  // ==========================================
+  // VERIFICAR CONEXIÓN CON SUPABASE
+  // ==========================================
   if (!supabaseClient) {
     mostrarMensaje(
       "No se pudo conectar con Supabase. Recarga la página e inténtalo nuevamente.",
@@ -82,7 +81,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Validar que las contraseñas coincidan durante el registro
+  // ==========================================
+  // VALIDAR CONFIRMACIÓN DE CONTRASEÑA
+  // ==========================================
   function validarConfirmacion() {
     if (!claveRegistro || !confirmarClave) return;
 
@@ -96,9 +97,9 @@ document.addEventListener("DOMContentLoaded", () => {
   claveRegistro?.addEventListener("input", validarConfirmacion);
   confirmarClave?.addEventListener("input", validarConfirmacion);
 
-  // ==================================================
+  // ==========================================
   // REGISTRO DE USUARIOS
-  // ==================================================
+  // ==========================================
   if (formRegistro) {
     formRegistro.addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -111,35 +112,36 @@ document.addEventListener("DOMContentLoaded", () => {
       bloquearFormulario(formRegistro, true);
 
       const nombres =
-        formRegistro.elements["nombres"]?.value.trim() || "";
+        formRegistro.elements["nombres"].value.trim();
 
       const apellidos =
-        formRegistro.elements["apellidos"]?.value.trim() || "";
+        formRegistro.elements["apellidos"].value.trim();
 
       const correo =
-        formRegistro.elements["correo"]?.value.trim() || "";
+        formRegistro.elements["correo"].value.trim();
 
       const clave =
-        formRegistro.elements["password"]?.value || "";
+        formRegistro.elements["password"].value;
 
       try {
-        const { data, error } = await supabaseClient.auth.signUp({
-          email: correo,
-          password: clave,
-          options: {
-            data: {
-              nombres,
-              apellidos
-            },
-            emailRedirectTo: URL_PROYECTO
-          }
-        });
+        const { data, error } =
+          await supabaseClient.auth.signUp({
+            email: correo,
+            password: clave,
+            options: {
+              data: {
+                nombres,
+                apellidos
+              },
+              emailRedirectTo: URL_PROYECTO
+            }
+          });
 
         if (error) throw error;
 
         if (data.session) {
           mostrarMensaje(
-            "Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.",
+            "Tu cuenta fue creada. Ya puedes iniciar sesión.",
             "success"
           );
         } else {
@@ -160,10 +162,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
- 
-  // ==================================================
+  // ==========================================
   // INICIO DE SESIÓN
-  // ==================================================
+  // ==========================================
   if (formLogin) {
     formLogin.addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -174,12 +175,13 @@ document.addEventListener("DOMContentLoaded", () => {
       bloquearFormulario(formLogin, true);
 
       const correo =
-        formLogin.elements["correo"]?.value.trim() || "";
+        formLogin.elements["correo"].value.trim();
 
       const clave =
-        formLogin.elements["password"]?.value || "";
+        formLogin.elements["password"].value;
 
       try {
+        // 1. Autenticar al usuario
         const { data: loginData, error: loginError } =
           await supabaseClient.auth.signInWithPassword({
             email: correo,
@@ -191,9 +193,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const usuario = loginData.user;
 
         if (!usuario) {
-          throw new Error("No se pudo identificar al usuario.");
+          throw new Error(
+            "No se pudo identificar al usuario."
+          );
         }
 
+        // 2. Consultar el rol del usuario
         const { data: perfil, error: perfilError } =
           await supabaseClient
             .from("perfiles")
@@ -208,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           mostrarMensaje(
-            "No pudimos verificar tu rol. Revisa los permisos de tu perfil.",
+            "Iniciaste sesión, pero no pudimos verificar tu rol. Revisa los permisos del perfil en Supabase.",
             "warning"
           );
           return;
@@ -222,6 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        // 3. Redirigir según el rol
         switch (perfil.rol) {
           case "administrador":
             window.location.href = "administracion.html";
@@ -233,14 +239,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
           case "funcionario":
             mostrarMensaje(
-              "El módulo de funcionarios aún está en construcción.",
+              "Tu cuenta es de funcionario. El módulo correspondiente aún está en construcción.",
               "info"
             );
             break;
 
           default:
             mostrarMensaje(
-              "Tu cuenta tiene un rol no reconocido.",
+              "Tu cuenta tiene un rol no reconocido. Contacta al administrador.",
               "warning"
             );
         }
@@ -253,10 +259,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
-  // ==================================================
-  // RECUPERACIÓN DE CONTRASEÑA POR CORREO
-  // ==================================================
+  // ==========================================
+  // RECUPERACIÓN DE CONTRASEÑA
+  // ==========================================
   if (formRecuperar) {
     formRecuperar.addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -267,13 +272,16 @@ document.addEventListener("DOMContentLoaded", () => {
       bloquearFormulario(formRecuperar, true);
 
       const correo =
-        formRecuperar.elements["correo"]?.value.trim() || "";
+        formRecuperar.elements["correo"].value.trim();
 
       try {
         const { error } =
-          await supabaseClient.auth.resetPasswordForEmail(correo, {
-            redirectTo: URL_PROYECTO
-          });
+          await supabaseClient.auth.resetPasswordForEmail(
+            correo,
+            {
+              redirectTo: URL_PROYECTO
+            }
+          );
 
         if (error) throw error;
 
