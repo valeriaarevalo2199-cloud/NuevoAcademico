@@ -1,10 +1,8 @@
 
-
 (() => {
   "use strict";
 
   const client = window.supabaseClient;
-
   const $ = (id) => document.getElementById(id);
 
   const elementos = {
@@ -16,8 +14,8 @@
     apellidos: $("apellidos"),
     correo: $("correo"),
     rol: $("rol"),
-    rolPerfil: $("rolPerfil"),
-    nombreCompleto: $("nombreCompleto"),
+    rolResumen: $("rolResumen"),
+    nombreResumen: $("nombreResumen"),
     correoResumen: $("correoResumen"),
     fechaRegistro: $("fechaRegistro"),
     avatar: $("avatarPerfil"),
@@ -27,7 +25,10 @@
   };
 
   let usuarioActual = null;
-  let valoresOriginales = { nombres: "", apellidos: "" };
+  let valoresOriginales = {
+    nombres: "",
+    apellidos: ""
+  };
 
   function mostrarMensaje(texto, tipo = "info") {
     elementos.mensaje.textContent = texto;
@@ -54,7 +55,10 @@
     if (!fecha) return "No disponible";
 
     const fechaValida = new Date(fecha);
-    if (Number.isNaN(fechaValida.getTime())) return "No disponible";
+
+    if (Number.isNaN(fechaValida.getTime())) {
+      return "No disponible";
+    }
 
     return new Intl.DateTimeFormat("es-CO", {
       day: "2-digit",
@@ -66,9 +70,9 @@
   function actualizarResumen() {
     const nombres = normalizarTexto(elementos.nombres.value);
     const apellidos = normalizarTexto(elementos.apellidos.value);
-    const nombre = `${nombres} ${apellidos}`.trim();
+    const nombreCompleto = `${nombres} ${apellidos}`.trim();
 
-    elementos.nombreCompleto.textContent = nombre || "Mi perfil";
+    elementos.nombreResumen.textContent = nombreCompleto || "Mi perfil";
     elementos.avatar.textContent = obtenerIniciales(nombres, apellidos);
   }
 
@@ -76,6 +80,7 @@
     const nombres = perfil.nombres || "";
     const apellidos = perfil.apellidos || "";
     const correo = perfil.correo || usuarioAuth.email || "";
+    const rol = perfil.rol || "No asignado";
 
     valoresOriginales = { nombres, apellidos };
 
@@ -83,12 +88,12 @@
     elementos.apellidos.value = apellidos;
     elementos.correo.value = correo;
     elementos.correoResumen.textContent = correo || "No disponible";
-    elementos.rol.value = perfil.rol || "No asignado";
-    elementos.rolPerfil.textContent = perfil.rol || "No asignado";
-    elementos.fechaRegistro.textContent =
-      formatearFecha(perfil.created_at);
+    elementos.rol.value = rol;
+    elementos.rolResumen.textContent = rol;
+    elementos.fechaRegistro.textContent = formatearFecha(perfil.created_at);
 
     actualizarResumen();
+
     elementos.carga.classList.add("d-none");
     elementos.contenido.classList.remove("d-none");
   }
@@ -97,7 +102,7 @@
     if (!client) {
       elementos.carga.classList.add("d-none");
       mostrarMensaje(
-        "No se pudo iniciar la conexión con la base de datos. Recarga la página.",
+        "No se pudo conectar con Supabase. Recarga la página e inténtalo de nuevo.",
         "danger"
       );
       return;
@@ -109,14 +114,12 @@
 
       if (errorSesion) throw errorSesion;
 
-      const sesion = sesionData.session;
+      usuarioActual = sesionData.session?.user || null;
 
-      if (!sesion?.user) {
+      if (!usuarioActual) {
         window.location.href = "../index.html";
         return;
       }
-
-      usuarioActual = sesion.user;
 
       const { data: perfil, error } = await client
         .from("perfiles")
@@ -129,7 +132,7 @@
       if (!perfil) {
         elementos.carga.classList.add("d-none");
         mostrarMensaje(
-          "No encontramos tu perfil en la base de datos. Contacta al administrador de la plataforma.",
+          "No encontramos tu perfil. Contacta al administrador de la plataforma.",
           "warning"
         );
         return;
@@ -141,7 +144,7 @@
 
       elementos.carga.classList.add("d-none");
       mostrarMensaje(
-        "No fue posible cargar tu perfil. Verifica tu conexión e inténtalo de nuevo.",
+        "No fue posible cargar tu perfil. Verifica la conexión e inténtalo de nuevo.",
         "danger"
       );
     }
@@ -152,7 +155,10 @@
     ocultarMensaje();
 
     if (!usuarioActual) {
-      mostrarMensaje("Tu sesión no está disponible. Inicia sesión de nuevo.", "warning");
+      mostrarMensaje(
+        "Tu sesión no está disponible. Inicia sesión de nuevo.",
+        "warning"
+      );
       return;
     }
 
@@ -160,12 +166,18 @@
     const apellidos = normalizarTexto(elementos.apellidos.value);
 
     if (!nombres || !apellidos) {
-      mostrarMensaje("Escribe tus nombres y apellidos para continuar.", "warning");
+      mostrarMensaje(
+        "Escribe tus nombres y apellidos para continuar.",
+        "warning"
+      );
       return;
     }
 
     if (nombres.length > 100 || apellidos.length > 100) {
-      mostrarMensaje("Los nombres y apellidos no pueden superar los 100 caracteres.", "warning");
+      mostrarMensaje(
+        "Los nombres y apellidos no pueden superar los 100 caracteres.",
+        "warning"
+      );
       return;
     }
 
@@ -183,7 +195,6 @@
     elementos.btnGuardar.textContent = "Guardando...";
 
     try {
-      // Actualizamos solo las columnas autorizadas y la fila del usuario actual.
       const { data, error } = await client
         .from("perfiles")
         .update({ nombres, apellidos })
@@ -195,17 +206,20 @@
 
       if (!data) {
         throw new Error(
-          "No se actualizó ningún registro. Verifica la política de seguridad del perfil."
+          "No se actualizó ningún registro. Revisa la política RLS del perfil."
         );
       }
 
       mostrarPerfil(data, usuarioActual);
-      mostrarMensaje("¡Tus datos se actualizaron correctamente!", "success");
+      mostrarMensaje(
+        "¡Tus datos se actualizaron correctamente!",
+        "success"
+      );
     } catch (error) {
       console.error("Error al guardar el perfil:", error);
 
       mostrarMensaje(
-        "No se pudieron guardar los cambios. Revisa los permisos de UPDATE y la política RLS de perfiles.",
+        "No se pudieron guardar los cambios. Verifica los permisos de actualización y la política de seguridad.",
         "danger"
       );
     } finally {
@@ -218,21 +232,36 @@
   function restablecerCambios() {
     elementos.nombres.value = valoresOriginales.nombres;
     elementos.apellidos.value = valoresOriginales.apellidos;
+
     actualizarResumen();
     ocultarMensaje();
   }
 
   async function cerrarSesion() {
+    if (!client) {
+      mostrarMensaje(
+        "No se pudo conectar con el servicio de autenticación.",
+        "danger"
+      );
+      return;
+    }
+
     elementos.btnCerrarSesion.disabled = true;
 
     try {
       const { error } = await client.auth.signOut();
+
       if (error) throw error;
 
       window.location.href = "../index.html";
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
-      mostrarMensaje("No se pudo cerrar la sesión. Inténtalo de nuevo.", "danger");
+
+      mostrarMensaje(
+        "No se pudo cerrar la sesión. Inténtalo de nuevo.",
+        "danger"
+      );
+
       elementos.btnCerrarSesion.disabled = false;
     }
   }
