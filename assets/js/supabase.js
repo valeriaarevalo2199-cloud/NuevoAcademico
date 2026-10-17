@@ -10,3 +10,7 @@ window.supabaseClient = createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
 );
+console.log(
+  "Cliente Supabase cargado:",
+  Boolean(window.supabaseClient)
+);
