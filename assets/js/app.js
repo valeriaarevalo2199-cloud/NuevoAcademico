@@ -160,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+ 
   // ==================================================
   // INICIO DE SESIÓN
   // ==================================================
@@ -179,7 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
         formLogin.elements["password"]?.value || "";
 
       try {
-        // 1. Autenticar al usuario
         const { data: loginData, error: loginError } =
           await supabaseClient.auth.signInWithPassword({
             email: correo,
@@ -194,7 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error("No se pudo identificar al usuario.");
         }
 
-        // 2. Consultar el rol del usuario
         const { data: perfil, error: perfilError } =
           await supabaseClient
             .from("perfiles")
@@ -209,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           mostrarMensaje(
-            "Iniciaste sesión, pero no pudimos verificar tu rol. Revisa los permisos del perfil en Supabase.",
+            "No pudimos verificar tu rol. Revisa los permisos de tu perfil.",
             "warning"
           );
           return;
@@ -223,7 +222,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // 3. Redirigir según el rol
         switch (perfil.rol) {
           case "administrador":
             window.location.href = "administracion.html";
@@ -235,14 +233,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
           case "funcionario":
             mostrarMensaje(
-              "Tu cuenta es de funcionario. El módulo correspondiente aún está en construcción.",
+              "El módulo de funcionarios aún está en construcción.",
               "info"
             );
             break;
 
           default:
             mostrarMensaje(
-              "Tu cuenta tiene un rol no reconocido. Contacta al administrador.",
+              "Tu cuenta tiene un rol no reconocido.",
               "warning"
             );
         }
@@ -254,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
 
   // ==================================================
   // RECUPERACIÓN DE CONTRASEÑA POR CORREO
