@@ -428,7 +428,13 @@
             class="form-control" autocomplete="email" required>
         </div>
 
-<div class="text-end mb-3">
+        <div class="mb-3">
+          <label for="claveLogin" class="form-label">Contraseña</label>
+          <input id="claveLogin" name="password" type="password"
+            class="form-control" autocomplete="current-password"
+            required>
+        </div>
+        <div class="text-end mb-3">
   <button
     type="button"
     id="btnRecuperarClave"
@@ -437,13 +443,6 @@
     ¿Olvidaste tu contraseña?
   </button>
 </div>
-
-        <div class="mb-3">
-          <label for="claveLogin" class="form-label">Contraseña</label>
-          <input id="claveLogin" name="password" type="password"
-            class="form-control" autocomplete="current-password"
-            required>
-        </div>
 
         <button type="submit" class="btn btn-primary w-100">
           Iniciar sesión
