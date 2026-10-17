@@ -247,20 +247,106 @@
       </div>
     </section>
 
-    <section id="acceso" class="py-5">
-      <div class="container">
-        <div class="access-card text-center p-4 p-lg-5">
-          <h2 class="fw-bold">Tu próximo trámite empieza aquí</h2>
-          <p class="text-secondary mb-4">
-            Estamos preparando las funciones de acceso y registro.
-          </p>
-          <p class="small mb-0">
-            El inicio de sesión y la creación de cuentas se
-            habilitarán cuando configuremos la autenticación segura.
-          </p>
+   
+<section id="acceso" class="py-5">
+  <div class="container">
+    <div class="access-card p-4 p-lg-5">
+      <div class="text-center mb-4">
+        <p class="section-eyebrow">ÁREA DE USUARIO</p>
+        <h2 class="fw-bold">Bienvenido a Académico Fácil</h2>
+        <p class="text-secondary">
+          Crea tu cuenta o ingresa para gestionar tus solicitudes.
+        </p>
+      </div>
+
+      <div id="mensajeAuth"
+        class="alert d-none"
+        role="status"
+        aria-live="polite">
+      </div>
+
+      <div class="row g-5">
+        <div class="col-lg-6">
+          <h3 class="h4 fw-bold mb-3">Crear cuenta de estudiante</h3>
+
+          <form id="formRegistro">
+            <div class="mb-3">
+              <label for="nombres" class="form-label">Nombres</label>
+              <input id="nombres" name="nombres" type="text"
+                class="form-control" autocomplete="given-name"
+                maxlength="100" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="apellidos" class="form-label">Apellidos</label>
+              <input id="apellidos" name="apellidos" type="text"
+                class="form-control" autocomplete="family-name"
+                maxlength="100" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="correoRegistro" class="form-label">
+                Correo electrónico
+              </label>
+              <input id="correoRegistro" name="correo" type="email"
+                class="form-control" autocomplete="email"
+                maxlength="254" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="claveRegistro" class="form-label">
+                Contraseña
+              </label>
+              <input id="claveRegistro" name="password" type="password"
+                class="form-control" autocomplete="new-password"
+                minlength="8" required>
+              <div class="form-text">
+                Utiliza al menos 8 caracteres.
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              Crear cuenta
+            </button>
+          </form>
+        </div>
+
+        <div class="col-lg-6">
+          <h3 class="h4 fw-bold mb-3">Iniciar sesión</h3>
+
+          <form id="formLogin">
+            <div class="mb-3">
+              <label for="correoLogin" class="form-label">
+                Correo electrónico
+              </label>
+              <input id="correoLogin" name="correo" type="email"
+                class="form-control" autocomplete="email" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="claveLogin" class="form-label">
+                Contraseña
+              </label>
+              <input id="claveLogin" name="password" type="password"
+                class="form-control" autocomplete="current-password"
+                required>
+            </div>
+
+            <button type="submit" class="btn btn-outline-primary w-100">
+              Iniciar sesión
+            </button>
+          </form>
         </div>
       </div>
-    </section>
+
+      <p class="small text-secondary text-center mt-4 mb-0">
+        Al crear una cuenta, recibirás un correo para verificar tu dirección
+        si la confirmación de email está habilitada.
+      </p>
+    </div>
+  </div>
+</section>
+
   </main>
 
   <footer class="border-top py-4">
