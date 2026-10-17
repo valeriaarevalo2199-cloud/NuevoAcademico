@@ -77,6 +77,21 @@
   }
 
   function mostrarPerfil(perfil, usuarioAuth) {
+    console.log("Diagnóstico de elementos del perfil:");
+
+[
+  "nombreResumen",
+  "rolResumen",
+  "correoResumen",
+  "fechaRegistro",
+  "avatarPerfil",
+  "nombres",
+  "apellidos",
+  "correo",
+  "rol"
+].forEach((id) => {
+  console.log(`${id}:`, document.getElementById(id));
+});
     const nombres = perfil.nombres || "";
     const apellidos = perfil.apellidos || "";
     const correo = perfil.correo || usuarioAuth.email || "";
