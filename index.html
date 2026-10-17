@@ -21,7 +21,14 @@
 </head>
 
 <body>
-
+  <div class="container mt-3">
+  <div
+    id="mensajeConfirmacion"
+    class="alert d-none"
+    role="status"
+    aria-live="polite"
+  ></div>
+</div>
   <!-- MENÚ PRINCIPAL -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
     <div class="container">
@@ -291,6 +298,53 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.js"></script>
 
+<script>
+  (() => {
+    const cliente = window.supabaseClient;
+    const mensaje = document.getElementById("mensajeConfirmacion");
+
+    const hash = window.location.hash;
+    const parametros = new URLSearchParams(hash.replace(/^#/, ""));
+    const vieneDeConfirmacion =
+      parametros.get("type") === "signup" ||
+      parametros.has("access_token") ||
+      parametros.has("error_description");
+
+    if (!cliente || !vieneDeConfirmacion || !mensaje) return;
+
+    function mostrar(texto, tipo) {
+      mensaje.textContent = texto;
+      mensaje.className = `alert alert-${tipo}`;
+    }
+
+    cliente.auth.onAuthStateChange((evento, sesion) => {
+      if (evento === "SIGNED_IN" && sesion) {
+        mostrar(
+          "Tu correo fue confirmado correctamente. Ya puedes continuar a tu espacio académico.",
+          "success"
+        );
+      } else if (parametros.has("error_description")) {
+        mostrar(
+          "El enlace no pudo validarse o ha expirado. Solicita uno nuevo.",
+          "warning"
+        );
+      }
+
+      if (
+        evento === "SIGNED_IN" ||
+        parametros.has("error_description")
+      ) {
+        window.history.replaceState(
+          null,
+          document.title,
+          window.location.pathname + window.location.search
+        );
+      }
+    });
+  })();
+</script>
 </body>
 </html>
