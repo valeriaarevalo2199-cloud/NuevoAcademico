@@ -4,739 +4,702 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Académico Fácil: plataforma independiente para gestionar solicitudes académicas.">
+  <meta
+    name="description"
+    content="Académico Fácil: plataforma para gestionar y consultar solicitudes académicas."
+  >
+  <title>Académico Fácil | Gestión académica</title>
 
-  <title>Académico Fácil | Inicio</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
   <link rel="stylesheet" href="assets/css/styles.css">
-
-  <style>
-    /* Ventana emergente de acceso */
-    .auth-overlay[hidden] {
-      display: none !important;
-    }
-
-    .auth-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(15, 23, 42, 0.72);
-      backdrop-filter: blur(5px);
-      overflow-y: auto;
-    }
-
-    .auth-modal {
-      position: relative;
-      width: 100%;
-      max-width: 480px;
-      max-height: calc(100vh - 40px);
-      overflow-y: auto;
-      background: #fff;
-      border-radius: 22px;
-      padding: 34px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
-      animation: authAppear 0.2s ease-out;
-    }
-
-    .auth-close {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-      width: 38px;
-      height: 38px;
-      border: 0;
-      border-radius: 50%;
-      background: #f1f5f9;
-      color: #334155;
-      font-size: 25px;
-      line-height: 1;
-    }
-
-    .auth-close:hover {
-      background: #e2e8f0;
-    }
-
-    .auth-brand {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 52px;
-      height: 52px;
-      margin-bottom: 18px;
-      border-radius: 15px;
-      background: #0d6efd;
-      color: white;
-      font-weight: 800;
-      font-size: 20px;
-    }
-
-    .auth-modal .form-control {
-      min-height: 46px;
-      border-radius: 10px;
-    }
-
-    .auth-modal .btn {
-      min-height: 46px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-
-    .auth-switch {
-      border: 0;
-      padding: 0;
-      background: transparent;
-      color: #0d6efd;
-      font-weight: 600;
-      text-decoration: underline;
-    }
-
-    .auth-message:empty {
-      display: none;
-    }
-
-    body.auth-open {
-      overflow: hidden;
-    }
-
-    @keyframes authAppear {
-      from {
-        opacity: 0;
-        transform: translateY(10px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    @media (max-width: 480px) {
-      .auth-modal {
-        padding: 28px 22px;
-        border-radius: 18px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .auth-modal {
-        animation: none;
-      }
-    }
-  </style>
 </head>
 
-<body>
-  <header>
-    <nav class="navbar navbar-expand-lg bg-white border-bottom">
-      <div class="container">
-        <a class="navbar-brand fw-bold" href="index.html">
-          <span class="brand-icon">AF</span>
-          Académico Fácil
-        </a>
+<body id="inicio">
 
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#menuPrincipal"
-          aria-controls="menuPrincipal"
-          aria-expanded="false"
-          aria-label="Abrir menú">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+  <!-- NAVEGACIÓN PRINCIPAL -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#inicio">
+        <span class="text-primary">AF</span> Académico Fácil
+      </a>
 
-        <div class="collapse navbar-collapse" id="menuPrincipal">
-          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-            <li class="nav-item">
-              <a class="nav-link" href="#servicios">Servicios</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#como-funciona">Cómo funciona</a>
-            </li>
-            <li class="nav-item">
-              <button class="btn btn-outline-primary"
-                type="button" data-auth="login">
-                Iniciar sesión
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn btn-primary"
-                type="button" data-auth="registro">
-                Crear cuenta
-              </button>
-            </li>
-          </ul>
-        </div>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#menuPrincipal"
+        aria-controls="menuPrincipal"
+        aria-expanded="false"
+        aria-label="Abrir menú"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="menuPrincipal">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+          <li class="nav-item">
+            <a class="nav-link" href="#servicios">Servicios</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#como-funciona">Cómo funciona</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#panelEstudiante">
+              Panel del estudiante
+            </a>
+          </li>
+          <li class="nav-item">
+            <button
+              class="btn btn-outline-primary"
+              type="button"
+              data-auth="login"
+            >
+              Iniciar sesión
+            </button>
+          </li>
+          <li class="nav-item">
+            <button
+              class="btn btn-primary"
+              type="button"
+              data-auth="registro"
+            >
+              Crear cuenta
+            </button>
+          </li>
+        </ul>
       </div>
-    </nav>
-  </header>
+    </div>
+  </nav>
 
-  <main>
-    <section class="hero-section py-5">
-      <div class="container py-lg-5">
-        <div class="row align-items-center g-5">
-          <div class="col-lg-7">
-            <span class="badge text-bg-light border mb-3">
-              Tu gestión académica, más sencilla
-            </span>
+  <!-- PORTADA -->
+  <header class="py-5 bg-light">
+    <div class="container py-lg-5">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-7">
+          <span class="badge text-bg-primary mb-3">
+            Tu gestión académica, más sencilla
+          </span>
 
-            <h1 class="display-4 fw-bold mb-4">
-              Tus solicitudes académicas,
-              <span class="text-primary">en un solo lugar.</span>
-            </h1>
+          <h1 class="display-4 fw-bold mb-4">
+            Tus solicitudes académicas en un solo lugar
+          </h1>
 
-            <p class="lead text-secondary mb-4">
-              Radica solicitudes, consulta su estado y mantén
-              un seguimiento organizado de tus trámites académicos
-              desde una sola plataforma.
-            </p>
+          <p class="lead text-secondary mb-4">
+            Registra solicitudes, consulta sus estados y realiza seguimiento
+            de tus trámites académicos desde una plataforma sencilla y organizada.
+          </p>
 
-            <div class="d-flex flex-wrap gap-3">
-              <button class="btn btn-primary btn-lg"
-                type="button" data-auth="registro">
-                Comenzar ahora
-              </button>
+          <div class="d-flex flex-wrap gap-3">
+            <button
+              class="btn btn-primary btn-lg"
+              type="button"
+              data-auth="registro"
+            >
+              Comenzar ahora
+            </button>
 
-              <a class="btn btn-outline-secondary btn-lg"
-                href="#como-funciona">
-                Conocer la plataforma
-              </a>
-            </div>
-
-            <p class="small text-secondary mt-4 mb-0">
-              Plataforma independiente de gestión académica.
-            </p>
+            <a class="btn btn-outline-secondary btn-lg" href="#servicios">
+              Conocer los servicios
+            </a>
           </div>
 
-          <div class="col-lg-5">
-            <div class="dashboard-preview shadow-sm">
-              <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                  <p class="small text-secondary mb-1">VISTA PREVIA</p>
-                  <h2 class="h5 fw-bold mb-0">Panel académico</h2>
-                </div>
-                <span class="preview-icon">AF</span>
-              </div>
-
-              <div class="preview-stat mb-3">
-                <span class="text-secondary">Seguimiento de solicitudes</span>
-                <div class="progress mt-3" role="progressbar"
-                  aria-label="Ilustración de seguimiento"
-                  aria-valuenow="70"
-                  aria-valuemin="0"
-                  aria-valuemax="100">
-                  <div class="progress-bar" style="width: 70%"></div>
-                </div>
-              </div>
-
-              <div class="preview-request">
-                <div>
-                  <strong>Certificados académicos</strong>
-                  <p class="small text-secondary mb-0">Ejemplo ilustrativo</p>
-                </div>
-                <span class="badge text-bg-light border">En revisión</span>
-              </div>
-
-              <div class="preview-request">
-                <div>
-                  <strong>Solicitud de información</strong>
-                  <p class="small text-secondary mb-0">Ejemplo ilustrativo</p>
-                </div>
-                <span class="badge text-bg-light border">Recibida</span>
-              </div>
-
-              <p class="small text-secondary mt-3 mb-0">
-                Esta vista es ilustrativa; todavía no contiene solicitudes reales.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="servicios" class="py-5">
-      <div class="container py-4">
-        <div class="text-center mb-5">
-          <p class="section-eyebrow">SERVICIOS</p>
-          <h2 class="fw-bold">¿Qué podrás gestionar?</h2>
-          <p class="text-secondary">
-            Un espacio organizado para tus trámites académicos.
+          <p class="text-secondary small mt-3 mb-0">
+            Plataforma en desarrollo. Algunas secciones muestran información ficticia.
           </p>
         </div>
 
-        <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
-            <article class="service-card h-100">
-              <div class="service-icon">01</div>
-              <h3 class="h5 fw-bold">Certificados y constancias</h3>
-              <p class="text-secondary mb-0">
-                Gestiona solicitudes de documentos académicos.
-              </p>
-            </article>
-          </div>
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-lg-5">
+              <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="rounded-3 bg-primary text-white p-3 fw-bold">
+                  AF
+                </div>
+                <div>
+                  <h2 class="h5 mb-1">Tu espacio académico</h2>
+                  <p class="text-secondary small mb-0">
+                    Todo más organizado
+                  </p>
+                </div>
+              </div>
 
-          <div class="col-md-6 col-lg-4">
-            <article class="service-card h-100">
-              <div class="service-icon">02</div>
-              <h3 class="h5 fw-bold">Matrículas y asignaturas</h3>
-              <p class="text-secondary mb-0">
-                Consulta información y solicita apoyo con tus trámites.
-              </p>
-            </article>
-          </div>
+              <div class="border rounded-3 p-3 mb-3">
+                <div class="d-flex justify-content-between gap-3">
+                  <span>Solicitudes</span>
+                  <strong>En un solo lugar</strong>
+                </div>
+              </div>
 
-          <div class="col-md-6 col-lg-4">
-            <article class="service-card h-100">
-              <div class="service-icon">03</div>
-              <h3 class="h5 fw-bold">Homologaciones y prácticas</h3>
-              <p class="text-secondary mb-0">
-                Organiza solicitudes relacionadas con tu formación.
+              <div class="border rounded-3 p-3 mb-3">
+                <div class="d-flex justify-content-between gap-3">
+                  <span>Seguimiento</span>
+                  <strong>Por estados</strong>
+                </div>
+              </div>
+
+              <div class="border rounded-3 p-3">
+                <div class="d-flex justify-content-between gap-3">
+                  <span>Historial</span>
+                  <strong>Organizado</strong>
+                </div>
+              </div>
+
+              <p class="small text-secondary mt-3 mb-0">
+                Vista ilustrativa; no representa datos de usuarios reales.
               </p>
-            </article>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section id="como-funciona" class="steps-section py-5">
-      <div class="container py-4">
-        <div class="text-center mb-5">
-          <p class="section-eyebrow">PROCESO</p>
-          <h2 class="fw-bold">¿Cómo funcionará?</h2>
-        </div>
-
-        <div class="row g-4 text-center">
-          <div class="col-md-4">
-            <div class="step-number">1</div>
-            <h3 class="h5 fw-bold">Regístrate</h3>
-            <p class="text-secondary">Crea tu cuenta de estudiante.</p>
-          </div>
-
-          <div class="col-md-4">
-            <div class="step-number">2</div>
-            <h3 class="h5 fw-bold">Radica tu solicitud</h3>
-            <p class="text-secondary">
-              Selecciona un servicio y describe tu necesidad.
-            </p>
-          </div>
-
-          <div class="col-md-4">
-            <div class="step-number">3</div>
-            <h3 class="h5 fw-bold">Consulta el seguimiento</h3>
-            <p class="text-secondary">
-              Revisa las actualizaciones de tu trámite.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-  
-<!-- PANEL DEL ESTUDIANTE: DATOS DE DEMOSTRACIÓN -->
-<section class="dashboard-demo" id="panelEstudiante">
-  <div class="dashboard-topbar">
-    <a class="dashboard-brand" href="#inicio">
-      <span class="dashboard-brand-icon">AF</span>
-      <span>Académico Fácil</span>
-    </a>
-
-    <div class="dashboard-user">
-      <div class="dashboard-avatar">ED</div>
-      <div>
-        <strong>Estudiante de demostración</strong>
-        <small>Panel estudiantil</small>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="dashboard-layout">
-    <aside class="dashboard-sidebar">
-      <p class="dashboard-menu-title">MENÚ PRINCIPAL</p>
-
-      <a class="dashboard-nav active" href="#resumen">
-        <span>▦</span> Resumen
-      </a>
-      <a class="dashboard-nav" href="#misSolicitudes">
-        <span>▤</span> Mis solicitudes
-      </a>
-      <a class="dashboard-nav" href="#actividad">
-        <span>◷</span> Actividad reciente
-      </a>
-      <a class="dashboard-nav" href="#ayuda">
-        <span>?</span> Ayuda y orientación
-      </a>
-
-      <div class="dashboard-help-card" id="ayuda">
-        <strong>¿Necesitas ayuda?</strong>
-        <p>Consulta la información de tus solicitudes y sus estados.</p>
-        <a href="#como-funciona">Ver cómo funciona</a>
-      </div>
-    </aside>
-
-    <main class="dashboard-main">
-      <div class="dashboard-demo-note">
-        <strong>Modo demostración:</strong>
-        estos datos son ficticios y no corresponden a solicitudes reales.
-      </div>
-
-      <section id="resumen">
-        <div class="dashboard-heading">
-          <div>
-            <p class="dashboard-eyebrow">ESPACIO DEL ESTUDIANTE</p>
-            <h2>¡Bienvenido a tu panel!</h2>
-            <p>Consulta el estado y seguimiento de tus solicitudes académicas.</p>
-          </div>
-
-          <a class="dashboard-primary-btn" href="#nuevaSolicitud">
-            + Nueva solicitud
-          </a>
-        </div>
-
-        <div class="dashboard-stats">
-          <article class="dashboard-stat">
-            <div class="dashboard-stat-icon">▤</div>
-            <p>Total de solicitudes</p>
-            <strong>12</strong>
-            <small>Registradas en la demostración</small>
-          </article>
-
-          <article class="dashboard-stat">
-            <div class="dashboard-stat-icon">◷</div>
-            <p>En revisión</p>
-            <strong>4</strong>
-            <small>En proceso de atención</small>
-          </article>
-
-          <article class="dashboard-stat">
-            <div class="dashboard-stat-icon">✓</div>
-            <p>Resueltas</p>
-            <strong>6</strong>
-            <small>Con atención finalizada</small>
-          </article>
-
-          <article class="dashboard-stat">
-            <div class="dashboard-stat-icon">!</div>
-            <p>Pendientes</p>
-            <strong>2</strong>
-            <small>Requieren información adicional</small>
-          </article>
-        </div>
-      </section>
-
-      <section class="dashboard-panel" id="misSolicitudes">
-        <div class="dashboard-panel-heading">
-          <div>
-            <h3>Mis solicitudes recientes</h3>
-            <p>Ejemplos de solicitudes y sus estados actuales.</p>
-          </div>
-          <a href="#nuevaSolicitud">Ver opciones</a>
-        </div>
-
-        <div class="dashboard-table-wrap">
-          <table class="dashboard-table">
-            <thead>
-              <tr>
-                <th>Radicado</th>
-                <th>Solicitud</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>AF-2026-000124</td>
-                <td>Certificado académico</td>
-                <td>15 oct. 2026</td>
-                <td><span class="dashboard-status status-review">En revisión</span></td>
-              </tr>
-              <tr>
-                <td>AF-2026-000123</td>
-                <td>Constancia de estudio</td>
-                <td>13 oct. 2026</td>
-                <td><span class="dashboard-status status-done">Resuelta</span></td>
-              </tr>
-              <tr>
-                <td>AF-2026-000122</td>
-                <td>Homologación</td>
-                <td>11 oct. 2026</td>
-                <td><span class="dashboard-status status-pending">Pendiente de información</span></td>
-              </tr>
-              <tr>
-                <td>AF-2026-000121</td>
-                <td>Soporte técnico</td>
-                <td>9 oct. 2026</td>
-                <td><span class="dashboard-status status-received">Recibida</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="dashboard-panel" id="actividad">
-        <div class="dashboard-panel-heading">
-          <div>
-            <h3>Actividad reciente</h3>
-            <p>Ejemplo del seguimiento que tendrá cada solicitud.</p>
-          </div>
-        </div>
-
-        <div class="dashboard-activity">
-          <div class="dashboard-activity-marker">✓</div>
-          <div>
-            <strong>Solicitud resuelta</strong>
-            <p>Constancia de estudio: la atención fue finalizada.</p>
-            <small>13 de octubre de 2026 · Dato ficticio</small>
-          </div>
-        </div>
-
-        <div class="dashboard-activity">
-          <div class="dashboard-activity-marker">◷</div>
-          <div>
-            <strong>Solicitud en revisión</strong>
-            <p>Certificado académico: se encuentra en proceso de atención.</p>
-            <small>15 de octubre de 2026 · Dato ficticio</small>
-          </div>
-        </div>
-      </section>
-
-      <section class="dashboard-panel" id="nuevaSolicitud">
-        <div class="dashboard-panel-heading">
-          <div>
-            <h3>Crear una solicitud</h3>
-            <p>Este módulo se habilitará en el siguiente paso del proyecto.</p>
-          </div>
-        </div>
-        <p>
-          Próximamente podrás elegir una categoría, describir tu necesidad
-          y generar un radicado para hacer seguimiento.
+  <!-- SERVICIOS -->
+  <section class="py-5" id="servicios">
+    <div class="container py-3">
+      <div class="text-center mb-5">
+        <p class="text-primary fw-semibold mb-2">NUESTROS SERVICIOS</p>
+        <h2 class="fw-bold">¿Qué podrás gestionar?</h2>
+        <p class="text-secondary">
+          Un espacio para organizar diferentes necesidades académicas.
         </p>
-      </section>
+      </div>
 
-      <p class="dashboard-footer-note">
-        Académico Fácil · Panel visual de demostración
-      </p>
-    </main>
-  </div>
-</section>
-<!-- FIN DEL PANEL DEL ESTUDIANTE -->
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="fs-2 mb-3">📄</div>
+              <h3 class="h5">Certificados académicos</h3>
+              <p class="text-secondary mb-0">
+                Solicitudes relacionadas con certificados y documentos académicos.
+              </p>
+            </div>
+          </article>
+        </div>
 
-  <footer class="border-top py-4">
-    <div class="container d-flex flex-column flex-md-row
-      justify-content-between align-items-center gap-2">
-      <p class="mb-0 fw-semibold">Académico Fácil</p>
-      <p class="small text-secondary mb-0">
-        Proyecto independiente de gestión de solicitudes académicas.
-        © <span id="currentYear"></span>
+        <div class="col-md-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="fs-2 mb-3">🎓</div>
+              <h3 class="h5">Constancias de estudio</h3>
+              <p class="text-secondary mb-0">
+                Organiza solicitudes de constancias y acreditaciones de estudio.
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="fs-2 mb-3">📚</div>
+              <h3 class="h5">Asignaturas y homologaciones</h3>
+              <p class="text-secondary mb-0">
+                Centraliza consultas sobre asignaturas y procesos de homologación.
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="fs-2 mb-3">📝</div>
+              <h3 class="h5">Matrícula</h3>
+              <p class="text-secondary mb-0">
+                Registra consultas relacionadas con trámites de matrícula.
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="fs-2 mb-3">💻</div>
+              <h3 class="h5">Soporte técnico</h3>
+              <p class="text-secondary mb-0">
+                Organiza solicitudes de ayuda relacionadas con dificultades técnicas.
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="fs-2 mb-3">🤝</div>
+              <h3 class="h5">Otros servicios</h3>
+              <p class="text-secondary mb-0">
+                Espacio para solicitudes de bienestar, prácticas y otras necesidades.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO FUNCIONA -->
+  <section class="py-5 bg-light" id="como-funciona">
+    <div class="container py-3">
+      <div class="text-center mb-5">
+        <p class="text-primary fw-semibold mb-2">PROCESO</p>
+        <h2 class="fw-bold">¿Cómo funcionará?</h2>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="text-center px-3">
+            <div class="display-5 fw-bold text-primary mb-3">01</div>
+            <h3 class="h5">Crea tu cuenta</h3>
+            <p class="text-secondary">
+              Regístrate para acceder a tu espacio personal.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="text-center px-3">
+            <div class="display-5 fw-bold text-primary mb-3">02</div>
+            <h3 class="h5">Registra tu solicitud</h3>
+            <p class="text-secondary">
+              Selecciona una categoría y describe el trámite que necesitas.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="text-center px-3">
+            <div class="display-5 fw-bold text-primary mb-3">03</div>
+            <h3 class="h5">Consulta el seguimiento</h3>
+            <p class="text-secondary">
+              Revisa el radicado y el estado de cada solicitud.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL DEL ESTUDIANTE -->
+  <section class="dashboard-demo" id="panelEstudiante">
+    <div class="dashboard-topbar">
+      <a class="dashboard-brand" href="#inicio">
+        <span class="dashboard-brand-icon">AF</span>
+        <span>Académico Fácil</span>
+      </a>
+
+      <div class="dashboard-user">
+        <div class="dashboard-avatar">ED</div>
+        <div>
+          <strong>Estudiante de demostración</strong>
+          <small>Panel estudiantil</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-layout">
+      <aside class="dashboard-sidebar">
+        <p class="dashboard-menu-title">MENÚ PRINCIPAL</p>
+
+        <a class="dashboard-nav active" href="#resumen">
+          <span>▦</span> Resumen
+        </a>
+
+        <a class="dashboard-nav" href="#misSolicitudes">
+          <span>▤</span> Mis solicitudes
+        </a>
+
+        <a class="dashboard-nav" href="#actividad">
+          <span>◷</span> Actividad reciente
+        </a>
+
+        <a class="dashboard-nav" href="#ayuda">
+          <span>?</span> Ayuda y orientación
+        </a>
+
+        <div class="dashboard-help-card" id="ayuda">
+          <strong>¿Necesitas ayuda?</strong>
+          <p>Consulta la información de tus solicitudes y sus estados.</p>
+          <a href="#como-funciona">Ver cómo funciona</a>
+        </div>
+      </aside>
+
+      <main class="dashboard-main">
+        <div class="dashboard-demo-note">
+          <strong>Modo demostración:</strong>
+          estos datos son ficticios y no corresponden a solicitudes reales.
+        </div>
+
+        <section id="resumen">
+          <div class="dashboard-heading">
+            <div>
+              <p class="dashboard-eyebrow">ESPACIO DEL ESTUDIANTE</p>
+              <h2>¡Bienvenido a tu panel!</h2>
+              <p>Consulta el estado y seguimiento de tus solicitudes académicas.</p>
+            </div>
+
+            <a class="dashboard-primary-btn" href="#nuevaSolicitud">
+              + Nueva solicitud
+            </a>
+          </div>
+
+          <div class="dashboard-stats">
+            <article class="dashboard-stat">
+              <div class="dashboard-stat-icon">▤</div>
+              <p>Total de solicitudes</p>
+              <strong>12</strong>
+              <small>Registradas en la demostración</small>
+            </article>
+
+            <article class="dashboard-stat">
+              <div class="dashboard-stat-icon">◷</div>
+              <p>En revisión</p>
+              <strong>4</strong>
+              <small>En proceso de atención</small>
+            </article>
+
+            <article class="dashboard-stat">
+              <div class="dashboard-stat-icon">✓</div>
+              <p>Resueltas</p>
+              <strong>6</strong>
+              <small>Con atención finalizada</small>
+            </article>
+
+            <article class="dashboard-stat">
+              <div class="dashboard-stat-icon">!</div>
+              <p>Pendientes</p>
+              <strong>2</strong>
+              <small>Requieren información adicional</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-panel" id="misSolicitudes">
+          <div class="dashboard-panel-heading">
+            <div>
+              <h3>Mis solicitudes recientes</h3>
+              <p>Ejemplos de solicitudes y sus estados actuales.</p>
+            </div>
+            <a href="#nuevaSolicitud">Ver opciones</a>
+          </div>
+
+          <div class="dashboard-table-wrap">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Radicado</th>
+                  <th>Solicitud</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>AF-2026-000124</td>
+                  <td>Certificado académico</td>
+                  <td>15 oct. 2026</td>
+                  <td><span class="dashboard-status status-review">En revisión</span></td>
+                </tr>
+
+                <tr>
+                  <td>AF-2026-000123</td>
+                  <td>Constancia de estudio</td>
+                  <td>13 oct. 2026</td>
+                  <td><span class="dashboard-status status-done">Resuelta</span></td>
+                </tr>
+
+                <tr>
+                  <td>AF-2026-000122</td>
+                  <td>Homologación</td>
+                  <td>11 oct. 2026</td>
+                  <td><span class="dashboard-status status-pending">Pendiente de información</span></td>
+                </tr>
+
+                <tr>
+                  <td>AF-2026-000121</td>
+                  <td>Soporte técnico</td>
+                  <td>9 oct. 2026</td>
+                  <td><span class="dashboard-status status-received">Recibida</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dashboard-panel" id="actividad">
+          <div class="dashboard-panel-heading">
+            <div>
+              <h3>Actividad reciente</h3>
+              <p>Ejemplo del seguimiento que tendrá cada solicitud.</p>
+            </div>
+          </div>
+
+          <div class="dashboard-activity">
+            <div class="dashboard-activity-marker">✓</div>
+            <div>
+              <strong>Solicitud resuelta</strong>
+              <p>Constancia de estudio: la atención fue finalizada.</p>
+              <small>13 de octubre de 2026 · Dato ficticio</small>
+            </div>
+          </div>
+
+          <div class="dashboard-activity">
+            <div class="dashboard-activity-marker">◷</div>
+            <div>
+              <strong>Solicitud en revisión</strong>
+              <p>Certificado académico: se encuentra en proceso de atención.</p>
+              <small>15 de octubre de 2026 · Dato ficticio</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-panel" id="nuevaSolicitud">
+          <div class="dashboard-panel-heading">
+            <div>
+              <h3>Crear una solicitud</h3>
+              <p>Este módulo se habilitará en el siguiente paso del proyecto.</p>
+            </div>
+          </div>
+
+          <p>
+            Próximamente podrás elegir una categoría, describir tu necesidad
+            y generar un radicado para hacer seguimiento.
+          </p>
+        </section>
+
+        <p class="dashboard-footer-note">
+          Académico Fácil · Panel visual de demostración
+        </p>
+      </main>
+    </div>
+  </section>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="bg-dark text-white py-4">
+    <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+      <p class="mb-0">© 2026 Académico Fácil</p>
+      <p class="mb-0 text-white-50">
+        Plataforma académica en desarrollo.
       </p>
+      <a class="link-light" href="#inicio">Volver al inicio ↑</a>
     </div>
   </footer>
 
-  <!-- Ventana emergente de registro e inicio de sesión -->
-  <div id="authOverlay" class="auth-overlay" hidden>
-    <section
-      class="auth-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="authTitle"
-      aria-describedby="authDescription">
-
-      <button type="button" id="cerrarAuth"
-        class="auth-close" aria-label="Cerrar ventana">
+  <!-- MODAL DE AUTENTICACIÓN -->
+  <div
+    id="authOverlay"
+    class="auth-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="authTitulo"
+    aria-hidden="true"
+    style="display: none;"
+  >
+    <div class="auth-modal">
+      <button
+        type="button"
+        id="cerrarAuth"
+        class="auth-close"
+        aria-label="Cerrar ventana"
+      >
         &times;
       </button>
 
-      <div class="text-center">
-        <div class="auth-brand">AF</div>
-        <h2 id="authTitle" class="h3 fw-bold">Crear cuenta</h2>
-        <p id="authDescription" class="text-secondary">
-          Regístrate para gestionar tus solicitudes académicas.
+      <div class="text-center mb-4">
+        <div class="dashboard-brand-icon mx-auto mb-3">AF</div>
+        <h2 id="authTitulo" class="h4">Bienvenido a Académico Fácil</h2>
+        <p class="text-secondary">
+          Ingresa a tu cuenta o crea una nueva.
         </p>
       </div>
 
-      <div id="mensajeAuth"
-        class="alert auth-message d-none"
+      <div
+        id="mensajeAuth"
+        class="alert d-none"
         role="status"
-        aria-live="polite"></div>
+        aria-live="polite"
+      ></div>
 
-      <!-- Formulario de registro -->
-      <form id="formRegistro">
+      <!-- FORMULARIO DE REGISTRO -->
+      <form id="formRegistro" hidden>
+        <h3 class="h5 mb-3">Crear una cuenta</h3>
+
         <div class="mb-3">
-          <label for="nombres" class="form-label">Nombres</label>
-          <input id="nombres" name="nombres" type="text"
-            class="form-control" autocomplete="given-name"
-            maxlength="100" required>
+          <label for="nombresRegistro" class="form-label">Nombres</label>
+          <input
+            type="text"
+            class="form-control"
+            id="nombresRegistro"
+            name="nombres"
+            autocomplete="given-name"
+            required
+          >
         </div>
 
         <div class="mb-3">
-          <label for="apellidos" class="form-label">Apellidos</label>
-          <input id="apellidos" name="apellidos" type="text"
-            class="form-control" autocomplete="family-name"
-            maxlength="100" required>
+          <label for="apellidosRegistro" class="form-label">Apellidos</label>
+          <input
+            type="text"
+            class="form-control"
+            id="apellidosRegistro"
+            name="apellidos"
+            autocomplete="family-name"
+            required
+          >
         </div>
 
         <div class="mb-3">
-          <label for="correoRegistro" class="form-label">
-            Correo electrónico
-          </label>
-          <input id="correoRegistro" name="correo" type="email"
-            class="form-control" autocomplete="email"
-            maxlength="254" required>
+          <label for="correoRegistro" class="form-label">Correo electrónico</label>
+          <input
+            type="email"
+            class="form-control"
+            id="correoRegistro"
+            name="correo"
+            autocomplete="email"
+            required
+          >
         </div>
 
         <div class="mb-3">
           <label for="claveRegistro" class="form-label">Contraseña</label>
-          <input id="claveRegistro" name="password" type="password"
-            class="form-control" autocomplete="new-password"
-            minlength="8" required>
-          <div class="form-text">Mínimo 8 caracteres.</div>
+          <input
+            type="password"
+            class="form-control"
+            id="claveRegistro"
+            name="password"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          >
+          <div class="form-text">Utiliza al menos 8 caracteres.</div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">
           Crear cuenta
         </button>
 
-        <p class="text-center small mt-4 mb-0">
-          ¿Ya tienes una cuenta?
-          <button type="button" class="auth-switch"
-            data-auth="login">Inicia sesión</button>
+        <p class="text-center mt-3 mb-0">
+          ¿Ya tienes cuenta?
+          <button type="button" class="btn btn-link p-0" data-auth="login">
+            Inicia sesión
+          </button>
         </p>
       </form>
 
-      <!-- Formulario de inicio de sesión -->
-      <form id="formLogin" hidden>
+      <!-- FORMULARIO DE INICIO DE SESIÓN -->
+      <form id="formLogin">
+        <h3 class="h5 mb-3">Iniciar sesión</h3>
+
         <div class="mb-3">
-          <label for="correoLogin" class="form-label">
-            Correo electrónico
-          </label>
-          <input id="correoLogin" name="correo" type="email"
-            class="form-control" autocomplete="email" required>
+          <label for="correoLogin" class="form-label">Correo electrónico</label>
+          <input
+            type="email"
+            class="form-control"
+            id="correoLogin"
+            name="correo"
+            autocomplete="email"
+            required
+          >
         </div>
 
         <div class="mb-3">
           <label for="claveLogin" class="form-label">Contraseña</label>
-          <input id="claveLogin" name="password" type="password"
-            class="form-control" autocomplete="current-password"
-            required>
+          <input
+            type="password"
+            class="form-control"
+            id="claveLogin"
+            name="password"
+            autocomplete="current-password"
+            required
+          >
         </div>
+
         <div class="text-end mb-3">
-  <button
-    type="button"
-    id="btnRecuperarClave"
-    class="btn btn-link p-0 text-decoration-none"
-  >
-    ¿Olvidaste tu contraseña?
-  </button>
-</div>
+          <button
+            type="button"
+            id="btnRecuperarClave"
+            class="btn btn-link p-0 text-decoration-none"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
 
         <button type="submit" class="btn btn-primary w-100">
           Iniciar sesión
         </button>
 
-        <p class="text-center small mt-4 mb-0">
-          ¿Aún no tienes cuenta?
-          <button type="button" class="auth-switch"
-            data-auth="registro">Crear cuenta</button>
+        <p class="text-center mt-3 mb-0">
+          ¿Todavía no tienes cuenta?
+          <button type="button" class="btn btn-link p-0" data-auth="registro">
+            Regístrate
+          </button>
         </p>
       </form>
-
-      <p class="small text-secondary text-center mt-4 mb-0">
-        Protegemos el acceso mediante Supabase Auth.
-      </p>
-    </section>
+    </div>
   </div>
 
+  <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/app.js"></script>
 
   <script>
-    (() => {
+    document.addEventListener("DOMContentLoaded", function () {
       const overlay = document.getElementById("authOverlay");
-      const closeButton = document.getElementById("cerrarAuth");
-      const title = document.getElementById("authTitle");
-      const description = document.getElementById("authDescription");
-      const registerForm = document.getElementById("formRegistro");
-      const loginForm = document.getElementById("formLogin");
-      const message = document.getElementById("mensajeAuth");
+      const formRegistro = document.getElementById("formRegistro");
+      const formLogin = document.getElementById("formLogin");
+      const titulo = document.getElementById("authTitulo");
+      const mensaje = document.getElementById("mensajeAuth");
+      const cerrar = document.getElementById("cerrarAuth");
 
-      let previousFocus = null;
+      function abrirAuth(tipo) {
+        overlay.style.display = "flex";
+        overlay.setAttribute("aria-hidden", "false");
 
-      function clearMessage() {
-        message.textContent = "";
-        message.className = "alert auth-message d-none";
+        const esRegistro = tipo === "registro";
+        formRegistro.hidden = !esRegistro;
+        formLogin.hidden = esRegistro;
+        titulo.textContent = esRegistro
+          ? "Crear una cuenta"
+          : "Iniciar sesión";
+
+        mensaje.textContent = "";
+        mensaje.className = "alert d-none";
       }
 
-      function openAuth(mode) {
-        previousFocus = document.activeElement;
-        clearMessage();
-
-        const isRegister = mode === "registro";
-
-        registerForm.hidden = !isRegister;
-        loginForm.hidden = isRegister;
-
-        title.textContent = isRegister ? "Crear cuenta" : "Iniciar sesión";
-        description.textContent = isRegister
-          ? "Regístrate para gestionar tus solicitudes académicas."
-          : "Ingresa a tu cuenta para continuar.";
-
-        overlay.hidden = false;
-        document.body.classList.add("auth-open");
-
-        const firstInput = isRegister
-          ? document.getElementById("nombres")
-          : document.getElementById("correoLogin");
-
-        firstInput.focus();
+      function cerrarAuth() {
+        overlay.style.display = "none";
+        overlay.setAttribute("aria-hidden", "true");
       }
 
-      function closeAuth() {
-        overlay.hidden = true;
-        document.body.classList.remove("auth-open");
-        clearMessage();
-
-        if (previousFocus && typeof previousFocus.focus === "function") {
-          previousFocus.focus();
-        }
-      }
-
-      document.querySelectorAll("[data-auth]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const mode = button.dataset.auth;
-
-          if (mode === "login" || mode === "registro") {
-            openAuth(mode);
-
-            const menu = document.getElementById("menuPrincipal");
-            if (menu && menu.classList.contains("show")) {
-              bootstrap.Collapse.getOrCreateInstance(menu).hide();
-            }
-          }
+      document.querySelectorAll("[data-auth]").forEach(function (boton) {
+        boton.addEventListener("click", function () {
+          abrirAuth(boton.dataset.auth);
         });
       });
 
-      closeButton.addEventListener("click", closeAuth);
+      cerrar.addEventListener("click", cerrarAuth);
 
-      overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-          closeAuth();
+      overlay.addEventListener("click", function (evento) {
+        if (evento.target === overlay) {
+          cerrarAuth();
         }
       });
 
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !overlay.hidden) {
-          closeAuth();
+      document.addEventListener("keydown", function (evento) {
+        if (evento.key === "Escape" && overlay.style.display !== "none") {
+          cerrarAuth();
         }
       });
-
-      document.getElementById("currentYear").textContent =
-        new Date().getFullYear();
-    })();
+    });
   </script>
 </body>
 </html>
