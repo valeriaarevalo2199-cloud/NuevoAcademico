@@ -16,6 +16,7 @@
     apellidos: $("apellidos"),
     correo: $("correo"),
     rol: $("rol"),
+    rolPerfil: $("rolPerfil"),
     nombreCompleto: $("nombreCompleto"),
     correoResumen: $("correoResumen"),
     fechaRegistro: $("fechaRegistro"),
