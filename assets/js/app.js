@@ -208,7 +208,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Error al iniciar sesión:", error);
         mostrarMensaje(mensajeError(error), "danger");
-      } finally {
+      }       } finally {
         bloquearFormulario(formLogin, false);
       }
     });
+  }
+});
