@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="description"
+    content="Registro de estudiantes en Académico Fácil."
+  >
+
+  <title>Crear cuenta | Académico Fácil</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+
+<body class="bg-light">
+
+  <nav class="navbar bg-white border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="../index.html">
+        <span class="text-primary">AF</span> Académico Fácil
+      </a>
+
+      <a href="../index.html" class="btn btn-outline-secondary btn-sm">
+        Volver al inicio
+      </a>
+    </div>
+  </nav>
+
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4 p-md-5">
+
+            <div class="text-center mb-4">
+              <div class="display-5 fw-bold text-primary">AF</div>
+              <h1 class="h3 mt-3">Crear cuenta</h1>
+              <p class="text-secondary">
+                Regístrate para acceder a tu espacio académico.
+              </p>
+            </div>
+
+            <div
+              id="mensajeRegistro"
+              class="alert d-none"
+              role="status"
+              aria-live="polite"
+            ></div>
+
+            <form id="formRegistro">
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="nombresRegistro" class="form-label">
+                    Nombres
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="nombresRegistro"
+                    name="nombres"
+                    autocomplete="given-name"
+                    required
+                  >
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="apellidosRegistro" class="form-label">
+                    Apellidos
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="apellidosRegistro"
+                    name="apellidos"
+                    autocomplete="family-name"
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="correoRegistro" class="form-label">
+                  Correo electrónico
+                </label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="correoRegistro"
+                  name="correo"
+                  autocomplete="email"
+                  required
+                >
+              </div>
+
+              <div class="mb-3">
+                <label for="claveRegistro" class="form-label">
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="claveRegistro"
+                  name="password"
+                  minlength="8"
+                  autocomplete="new-password"
+                  aria-describedby="ayudaClave"
+                  required
+                >
+                <div id="ayudaClave" class="form-text">
+                  Utiliza al menos 8 caracteres y una contraseña que no uses
+                  en otros servicios.
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="confirmarClave" class="form-label">
+                  Confirmar contraseña
+                </label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="confirmarClave"
+                  name="confirmarPassword"
+                  minlength="8"
+                  autocomplete="new-password"
+                  required
+                >
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100">
+                Crear mi cuenta
+              </button>
+
+            </form>
+
+            <p class="text-center mt-4 mb-0">
+              ¿Ya tienes una cuenta?
+              <a href="login.html">Inicia sesión</a>
+            </p>
+
+            <p class="text-secondary small text-center mt-4 mb-0">
+              Módulo en construcción. El registro se conectará con Supabase
+              en una etapa posterior.
+            </p>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const formRegistro = document.getElementById("formRegistro");
+    const clave = document.getElementById("claveRegistro");
+    const confirmarClave = document.getElementById("confirmarClave");
+    const mensaje = document.getElementById("mensajeRegistro");
+
+    function mostrarMensaje(texto, tipo) {
+      mensaje.textContent = texto;
+      mensaje.className = "alert alert-" + tipo;
+    }
+
+    confirmarClave.addEventListener("input", function () {
+      confirmarClave.setCustomValidity(
+        confirmarClave.value === clave.value
+          ? ""
+          : "Las contraseñas no coinciden."
+      );
+    });
+
+    clave.addEventListener("input", function () {
+      confirmarClave.setCustomValidity(
+        confirmarClave.value === clave.value
+          ? ""
+          : "Las contraseñas no coinciden."
+      );
+    });
+
+    formRegistro.addEventListener("submit", function (evento) {
+      evento.preventDefault();
+
+      if (clave.value !== confirmarClave.value) {
+        mostrarMensaje("Las contraseñas no coinciden.", "danger");
+        return;
+      }
+
+      mostrarMensaje(
+        "El diseño del registro está listo. La creación de cuentas se habilitará cuando conectemos Supabase.",
+        "info"
+      );
+    });
+  </script>
+
+</body>
+</html>
