@@ -1,0 +1,12 @@
+
+const SUPABASE_URL = "https://trjjgjxdexpufzdbugnr.supabase.co";
+
+// Reemplaza el texto de abajo con tu clave pública sb_publishable_...
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_FNi50iCV-yVwKWvqz9nGDQ_EMf--Ole";
+
+const { createClient } = supabase;
+
+window.supabaseClient = createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
