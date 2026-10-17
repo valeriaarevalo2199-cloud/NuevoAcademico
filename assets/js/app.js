@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const claveRegistro = document.getElementById("claveRegistro");
   const confirmarClave = document.getElementById("confirmarClave");
 
+  const URL_PROYECTO =
+    "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/";
+
+  // Mostrar mensajes al usuario
   function mostrarMensaje(mensaje, tipo = "success") {
     if (!mensajeAuth) return;
 
@@ -20,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mensajeAuth.setAttribute("aria-live", "polite");
   }
 
+  // Limpiar mensajes anteriores
   function limpiarMensaje() {
     if (!mensajeAuth) return;
 
@@ -27,30 +32,48 @@ document.addEventListener("DOMContentLoaded", () => {
     mensajeAuth.className = "alert d-none";
   }
 
+  // Evitar envíos repetidos
   function bloquearFormulario(formulario, bloquear) {
     if (!formulario) return;
 
-    formulario.querySelectorAll('button[type="submit"]').forEach((boton) => {
-      boton.disabled = bloquear;
-    });
+    formulario
+      .querySelectorAll('button[type="submit"], input[type="submit"]')
+      .forEach((boton) => {
+        boton.disabled = bloquear;
+      });
   }
 
+  // Traducir errores frecuentes de Supabase
   function mensajeError(error) {
-    const errores = {
-      "User already registered":
-        "Este correo ya tiene una cuenta. Intenta iniciar sesión.",
-      "Invalid login credentials":
-        "El correo o la contraseña son incorrectos.",
-      "Email not confirmed":
-        "Confirma tu correo electrónico antes de iniciar sesión.",
-      "Password should be at least 6 characters":
-        "La contraseña debe tener al menos 6 caracteres."
-    };
+    const mensaje = error?.message || "";
 
-    return errores[error?.message] ||
-      "No fue posible completar la operación. Verifica los datos e inténtalo nuevamente.";
+    if (mensaje.includes("User already registered")) {
+      return "Este correo ya tiene una cuenta. Intenta iniciar sesión.";
+    }
+
+    if (mensaje.includes("Invalid login credentials")) {
+      return "El correo o la contraseña son incorrectos.";
+    }
+
+    if (mensaje.includes("Email not confirmed")) {
+      return "Confirma tu correo electrónico antes de iniciar sesión.";
+    }
+
+    if (mensaje.includes("Password should be at least")) {
+      return "La contraseña no cumple con la longitud mínima requerida.";
+    }
+
+    if (mensaje.includes("rate limit")) {
+      return "Has realizado demasiados intentos. Espera un momento y vuelve a intentarlo.";
+    }
+
+    return (
+      "No fue posible completar la operación. " +
+      "Verifica los datos e inténtalo nuevamente."
+    );
   }
 
+  // Verificar conexión con Supabase
   if (!supabaseClient) {
     mostrarMensaje(
       "No se pudo conectar con Supabase. Recarga la página e inténtalo nuevamente.",
@@ -59,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // VALIDACIÓN DE CONFIRMACIÓN DE CONTRASEÑA
+  // Validar que las contraseñas coincidan durante el registro
   function validarConfirmacion() {
     if (!claveRegistro || !confirmarClave) return;
 
@@ -73,7 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
   claveRegistro?.addEventListener("input", validarConfirmacion);
   confirmarClave?.addEventListener("input", validarConfirmacion);
 
-  // REGISTRO
+  // ==================================================
+  // REGISTRO DE USUARIOS
+  // ==================================================
   if (formRegistro) {
     formRegistro.addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -85,19 +110,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
       bloquearFormulario(formRegistro, true);
 
-      const nombres = formRegistro.elements["nombres"].value.trim();
-      const apellidos = formRegistro.elements["apellidos"].value.trim();
-      const correo = formRegistro.elements["correo"].value.trim();
-      const clave = formRegistro.elements["password"].value;
+      const nombres =
+        formRegistro.elements["nombres"]?.value.trim() || "";
+
+      const apellidos =
+        formRegistro.elements["apellidos"]?.value.trim() || "";
+
+      const correo =
+        formRegistro.elements["correo"]?.value.trim() || "";
+
+      const clave =
+        formRegistro.elements["password"]?.value || "";
 
       try {
         const { data, error } = await supabaseClient.auth.signUp({
           email: correo,
           password: clave,
           options: {
-            data: { nombres, apellidos },
-            emailRedirectTo:
-              "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/"
+            data: {
+              nombres,
+              apellidos
+            },
+            emailRedirectTo: URL_PROYECTO
           }
         });
 
@@ -105,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.session) {
           mostrarMensaje(
-            "Tu cuenta fue creada. Ya puedes iniciar sesión.",
+            "Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.",
             "success"
           );
         } else {
@@ -126,9 +160,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ==================================================
   // INICIO DE SESIÓN
- 
-  // INICIO DE SESIÓN
+  // ==================================================
   if (formLogin) {
     formLogin.addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -138,8 +172,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       bloquearFormulario(formLogin, true);
 
-      const correo = formLogin.elements["correo"].value.trim();
-      const clave = formLogin.elements["password"].value;
+      const correo =
+        formLogin.elements["correo"]?.value.trim() || "";
+
+      const clave =
+        formLogin.elements["password"]?.value || "";
 
       try {
         // 1. Autenticar al usuario
@@ -157,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error("No se pudo identificar al usuario.");
         }
 
-        // 2. Consultar su rol en el perfil
+        // 2. Consultar el rol del usuario
         const { data: perfil, error: perfilError } =
           await supabaseClient
             .from("perfiles")
@@ -166,7 +203,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .maybeSingle();
 
         if (perfilError) {
-          console.error("Error consultando el perfil:", perfilError);
+          console.error(
+            "Error consultando el perfil:",
+            perfilError
+          );
+
           mostrarMensaje(
             "Iniciaste sesión, pero no pudimos verificar tu rol. Revisa los permisos del perfil en Supabase.",
             "warning"
@@ -182,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // 3. Redirigir según el rol registrado
+        // 3. Redirigir según el rol
         switch (perfil.rol) {
           case "administrador":
             window.location.href = "administracion.html";
@@ -208,8 +249,50 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Error al iniciar sesión:", error);
         mostrarMensaje(mensajeError(error), "danger");
-      }       } finally {
+      } finally {
         bloquearFormulario(formLogin, false);
+      }
+    });
+  }
+
+  // ==================================================
+  // RECUPERACIÓN DE CONTRASEÑA POR CORREO
+  // ==================================================
+  if (formRecuperar) {
+    formRecuperar.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      limpiarMensaje();
+
+      if (!formRecuperar.reportValidity()) return;
+
+      bloquearFormulario(formRecuperar, true);
+
+      const correo =
+        formRecuperar.elements["correo"]?.value.trim() || "";
+
+      try {
+        const { error } =
+          await supabaseClient.auth.resetPasswordForEmail(correo, {
+            redirectTo: URL_PROYECTO
+          });
+
+        if (error) throw error;
+
+        mostrarMensaje(
+          "Si el correo corresponde a una cuenta registrada, recibirás instrucciones para recuperar tu contraseña.",
+          "success"
+        );
+
+        formRecuperar.reset();
+      } catch (error) {
+        console.error(
+          "Error al recuperar la contraseña:",
+          error
+        );
+
+        mostrarMensaje(mensajeError(error), "danger");
+      } finally {
+        bloquearFormulario(formRecuperar, false);
       }
     });
   }
