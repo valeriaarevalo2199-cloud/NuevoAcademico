@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="Académico Fácil: plataforma para gestionar solicitudes académicas."
+  >
+
+  <title>Académico Fácil | Inicio</title>
+
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="index.html">
+          <span class="brand-icon">AF</span>
+          Académico Fácil
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#menuPrincipal"
+          aria-controls="menuPrincipal"
+          aria-expanded="false"
+          aria-label="Abrir menú"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div
+          class="collapse navbar-collapse"
+          id="menuPrincipal"
+        >
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+            <li class="nav-item">
+              <a class="nav-link" href="#servicios">Servicios</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#como-funciona">
+                Cómo funciona
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-outline-primary" href="#acceso">
+                Iniciar sesión
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-primary" href="#acceso">
+                Crear cuenta
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero-section py-5">
+      <div class="container py-lg-5">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-7">
+            <span class="badge text-bg-light border mb-3">
+              Tu gestión académica, más sencilla
+            </span>
+
+            <h1 class="display-4 fw-bold mb-4">
+              Tus solicitudes académicas,
+              <span class="text-primary">en un solo lugar.</span>
+            </h1>
+
+            <p class="lead text-secondary mb-4">
+              Radica solicitudes, consulta su estado y mantén
+              un seguimiento organizado de tus trámites académicos
+              desde una sola plataforma.
+            </p>
+
+            <div class="d-flex flex-wrap gap-3">
+              <a class="btn btn-primary btn-lg" href="#acceso">
+                Comenzar ahora
+              </a>
+              <a
+                class="btn btn-outline-secondary btn-lg"
+                href="#como-funciona"
+              >
+                Conocer la plataforma
+              </a>
+            </div>
+
+            <p class="small text-secondary mt-4 mb-0">
+              Plataforma independiente de gestión académica.
+            </p>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="dashboard-preview shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <p class="small text-secondary mb-1">
+                    VISTA PREVIA
+                  </p>
+                  <h2 class="h5 fw-bold mb-0">
+                    Panel académico
+                  </h2>
+                </div>
+                <span class="preview-icon">AF</span>
+              </div>
+
+              <div class="preview-stat mb-3">
+                <span class="text-secondary">Seguimiento de solicitudes</span>
+                <div class="progress mt-3" role="progressbar"
+                  aria-label="Ilustración de seguimiento"
+                  aria-valuenow="70"
+                  aria-valuemin="0"
+                  aria-valuemax="100">
+                  <div class="progress-bar" style="width: 70%"></div>
+                </div>
+              </div>
+
+              <div class="preview-request">
+                <div>
+                  <strong>Certificados académicos</strong>
+                  <p class="small text-secondary mb-0">
+                    Ejemplo ilustrativo
+                  </p>
+                </div>
+                <span class="badge text-bg-light border">
+                  En revisión
+                </span>
+              </div>
+
+              <div class="preview-request">
+                <div>
+                  <strong>Solicitud de información</strong>
+                  <p class="small text-secondary mb-0">
+                    Ejemplo ilustrativo
+                  </p>
+                </div>
+                <span class="badge text-bg-light border">
+                  Recibida
+                </span>
+              </div>
+
+              <p class="small text-secondary mt-3 mb-0">
+                Esta vista es ilustrativa; todavía no contiene
+                datos reales ni está conectada a una base de datos.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="servicios" class="py-5">
+      <div class="container py-4">
+        <div class="text-center mb-5">
+          <p class="section-eyebrow">SERVICIOS</p>
+          <h2 class="fw-bold">¿Qué podrás gestionar?</h2>
+          <p class="text-secondary">
+            Un espacio organizado para tus trámites académicos.
+          </p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <article class="service-card h-100">
+              <div class="service-icon">01</div>
+              <h3 class="h5 fw-bold">Certificados y constancias</h3>
+              <p class="text-secondary mb-0">
+                Gestiona solicitudes de documentos académicos.
+              </p>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-lg-4">
+            <article class="service-card h-100">
+              <div class="service-icon">02</div>
+              <h3 class="h5 fw-bold">Matrículas y asignaturas</h3>
+              <p class="text-secondary mb-0">
+                Consulta información y solicita apoyo con tus trámites.
+              </p>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-lg-4">
+            <article class="service-card h-100">
+              <div class="service-icon">03</div>
+              <h3 class="h5 fw-bold">Homologaciones y prácticas</h3>
+              <p class="text-secondary mb-0">
+                Organiza solicitudes relacionadas con tu formación.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="como-funciona" class="steps-section py-5">
+      <div class="container py-4">
+        <div class="text-center mb-5">
+          <p class="section-eyebrow">PROCESO</p>
+          <h2 class="fw-bold">¿Cómo funcionará?</h2>
+        </div>
+
+        <div class="row g-4 text-center">
+          <div class="col-md-4">
+            <div class="step-number">1</div>
+            <h3 class="h5 fw-bold">Regístrate</h3>
+            <p class="text-secondary">
+              Crea tu cuenta de estudiante.
+            </p>
+          </div>
+
+          <div class="col-md-4">
+            <div class="step-number">2</div>
+            <h3 class="h5 fw-bold">Radica tu solicitud</h3>
+            <p class="text-secondary">
+              Selecciona un servicio y describe tu necesidad.
+            </p>
+          </div>
+
+          <div class="col-md-4">
+            <div class="step-number">3</div>
+            <h3 class="h5 fw-bold">Consulta el seguimiento</h3>
+            <p class="text-secondary">
+              Revisa las actualizaciones de tu trámite.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="acceso" class="py-5">
+      <div class="container">
+        <div class="access-card text-center p-4 p-lg-5">
+          <h2 class="fw-bold">Tu próximo trámite empieza aquí</h2>
+          <p class="text-secondary mb-4">
+            Estamos preparando las funciones de acceso y registro.
+          </p>
+          <p class="small mb-0">
+            El inicio de sesión y la creación de cuentas se
+            habilitarán cuando configuremos la autenticación segura.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-top py-4">
+    <div class="container d-flex flex-column flex-md-row
+      justify-content-between align-items-center gap-2">
+      <p class="mb-0 fw-semibold">Académico Fácil</p>
+      <p class="small text-secondary mb-0">
+        Proyecto independiente de gestión de solicitudes académicas.
+        © <span id="currentYear"></span>
+      </p>
+    </div>
+  </footer>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  ></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
