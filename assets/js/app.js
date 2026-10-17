@@ -157,6 +157,55 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Mantener el mensaje accesible y visible en el modal.
+  
+  // RECUPERAR CONTRASEÑA
+  const btnRecuperarClave = document.getElementById("btnRecuperarClave");
+
+  if (btnRecuperarClave) {
+    btnRecuperarClave.addEventListener("click", async () => {
+      limpiarMensaje();
+
+      const correoInput = formLogin?.elements["correo"];
+      const correo = correoInput?.value.trim();
+
+      if (!correo) {
+        mostrarMensaje(
+          "Escribe tu correo electrónico en el campo de inicio de sesión y vuelve a pulsar «¿Olvidaste tu contraseña?».",
+          "warning"
+        );
+        correoInput?.focus();
+        return;
+      }
+
+      btnRecuperarClave.disabled = true;
+
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(
+          correo,
+          {
+            redirectTo:
+              "https://valeriaarevalo2199-cloud.github.io/NuevoAcademico/"
+          }
+        );
+
+        if (error) throw error;
+
+        mostrarMensaje(
+          "Si existe una cuenta para ese correo, recibirás instrucciones para recuperar el acceso. Revisa también la carpeta de spam.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Error al solicitar recuperación:", error);
+        mostrarMensaje(
+          "No pudimos solicitar la recuperación. Inténtalo nuevamente más tarde.",
+          "danger"
+        );
+      } finally {
+        btnRecuperarClave.disabled = false;
+      }
+    });
+  }
+
   if (authOverlay && mensajeAuth) {
     authOverlay.addEventListener("click", () => {
       // El mensaje se conserva hasta que el usuario cambie de formulario
