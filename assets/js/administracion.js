@@ -247,13 +247,24 @@ function asignarTexto(id, valor) {
   }
 }
 
+
 function formatearEstado(estado) {
   if (!estado) return "Sin estado";
 
-  return estado
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, letra => letra.toUpperCase());
+  const nombres = {
+    recibida: "Recibida",
+    en_revision: "En revisión",
+    pendiente_informacion: "Pendiente de información",
+    pendiente_de_informacion: "Pendiente de información",
+    resuelta: "Resuelta",
+    cerrada: "Cerrada",
+    rechazada: "Rechazada"
+  };
+
+  return nombres[estado] ||
+    estado.replace(/_/g, " ").replace(/\b\w/g, letra => letra.toUpperCase());
 }
+
 
 function formatearFecha(fecha) {
   if (!fecha) return "Sin fecha";
