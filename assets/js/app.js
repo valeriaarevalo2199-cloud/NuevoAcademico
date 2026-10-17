@@ -212,4 +212,3 @@ document.addEventListener("DOMContentLoaded", () => {
         bloquearFormulario(formLogin, false);
       }
     });
-  }
