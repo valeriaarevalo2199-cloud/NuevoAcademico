@@ -14,3 +14,19 @@ console.log(
   "Cliente Supabase cargado:",
   Boolean(window.supabaseClient)
 );
+
+(async () => {
+  const { data, error } = await window.supabaseClient
+    .from("categorias")
+    .select("nombre")
+    .eq("activa", true);
+
+  if (error) {
+    console.error("Error al consultar categorías:", error.message);
+    return;
+  }
+
+  console.log("Conexión con la base de datos correcta.");
+  console.log("Categorías encontradas:", data.length);
+  console.table(data);
+})();
