@@ -335,6 +335,194 @@
       </div>
     </section>
   </main>
+  
+<!-- PANEL DEL ESTUDIANTE: DATOS DE DEMOSTRACIÓN -->
+<section class="dashboard-demo" id="panelEstudiante">
+  <div class="dashboard-topbar">
+    <a class="dashboard-brand" href="#inicio">
+      <span class="dashboard-brand-icon">AF</span>
+      <span>Académico Fácil</span>
+    </a>
+
+    <div class="dashboard-user">
+      <div class="dashboard-avatar">ED</div>
+      <div>
+        <strong>Estudiante de demostración</strong>
+        <small>Panel estudiantil</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <p class="dashboard-menu-title">MENÚ PRINCIPAL</p>
+
+      <a class="dashboard-nav active" href="#resumen">
+        <span>▦</span> Resumen
+      </a>
+      <a class="dashboard-nav" href="#misSolicitudes">
+        <span>▤</span> Mis solicitudes
+      </a>
+      <a class="dashboard-nav" href="#actividad">
+        <span>◷</span> Actividad reciente
+      </a>
+      <a class="dashboard-nav" href="#ayuda">
+        <span>?</span> Ayuda y orientación
+      </a>
+
+      <div class="dashboard-help-card" id="ayuda">
+        <strong>¿Necesitas ayuda?</strong>
+        <p>Consulta la información de tus solicitudes y sus estados.</p>
+        <a href="#como-funciona">Ver cómo funciona</a>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-demo-note">
+        <strong>Modo demostración:</strong>
+        estos datos son ficticios y no corresponden a solicitudes reales.
+      </div>
+
+      <section id="resumen">
+        <div class="dashboard-heading">
+          <div>
+            <p class="dashboard-eyebrow">ESPACIO DEL ESTUDIANTE</p>
+            <h2>¡Bienvenido a tu panel!</h2>
+            <p>Consulta el estado y seguimiento de tus solicitudes académicas.</p>
+          </div>
+
+          <a class="dashboard-primary-btn" href="#nuevaSolicitud">
+            + Nueva solicitud
+          </a>
+        </div>
+
+        <div class="dashboard-stats">
+          <article class="dashboard-stat">
+            <div class="dashboard-stat-icon">▤</div>
+            <p>Total de solicitudes</p>
+            <strong>12</strong>
+            <small>Registradas en la demostración</small>
+          </article>
+
+          <article class="dashboard-stat">
+            <div class="dashboard-stat-icon">◷</div>
+            <p>En revisión</p>
+            <strong>4</strong>
+            <small>En proceso de atención</small>
+          </article>
+
+          <article class="dashboard-stat">
+            <div class="dashboard-stat-icon">✓</div>
+            <p>Resueltas</p>
+            <strong>6</strong>
+            <small>Con atención finalizada</small>
+          </article>
+
+          <article class="dashboard-stat">
+            <div class="dashboard-stat-icon">!</div>
+            <p>Pendientes</p>
+            <strong>2</strong>
+            <small>Requieren información adicional</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="dashboard-panel" id="misSolicitudes">
+        <div class="dashboard-panel-heading">
+          <div>
+            <h3>Mis solicitudes recientes</h3>
+            <p>Ejemplos de solicitudes y sus estados actuales.</p>
+          </div>
+          <a href="#nuevaSolicitud">Ver opciones</a>
+        </div>
+
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Radicado</th>
+                <th>Solicitud</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AF-2026-000124</td>
+                <td>Certificado académico</td>
+                <td>15 oct. 2026</td>
+                <td><span class="dashboard-status status-review">En revisión</span></td>
+              </tr>
+              <tr>
+                <td>AF-2026-000123</td>
+                <td>Constancia de estudio</td>
+                <td>13 oct. 2026</td>
+                <td><span class="dashboard-status status-done">Resuelta</span></td>
+              </tr>
+              <tr>
+                <td>AF-2026-000122</td>
+                <td>Homologación</td>
+                <td>11 oct. 2026</td>
+                <td><span class="dashboard-status status-pending">Pendiente de información</span></td>
+              </tr>
+              <tr>
+                <td>AF-2026-000121</td>
+                <td>Soporte técnico</td>
+                <td>9 oct. 2026</td>
+                <td><span class="dashboard-status status-received">Recibida</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="dashboard-panel" id="actividad">
+        <div class="dashboard-panel-heading">
+          <div>
+            <h3>Actividad reciente</h3>
+            <p>Ejemplo del seguimiento que tendrá cada solicitud.</p>
+          </div>
+        </div>
+
+        <div class="dashboard-activity">
+          <div class="dashboard-activity-marker">✓</div>
+          <div>
+            <strong>Solicitud resuelta</strong>
+            <p>Constancia de estudio: la atención fue finalizada.</p>
+            <small>13 de octubre de 2026 · Dato ficticio</small>
+          </div>
+        </div>
+
+        <div class="dashboard-activity">
+          <div class="dashboard-activity-marker">◷</div>
+          <div>
+            <strong>Solicitud en revisión</strong>
+            <p>Certificado académico: se encuentra en proceso de atención.</p>
+            <small>15 de octubre de 2026 · Dato ficticio</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-panel" id="nuevaSolicitud">
+        <div class="dashboard-panel-heading">
+          <div>
+            <h3>Crear una solicitud</h3>
+            <p>Este módulo se habilitará en el siguiente paso del proyecto.</p>
+          </div>
+        </div>
+        <p>
+          Próximamente podrás elegir una categoría, describir tu necesidad
+          y generar un radicado para hacer seguimiento.
+        </p>
+      </section>
+
+      <p class="dashboard-footer-note">
+        Académico Fácil · Panel visual de demostración
+      </p>
+    </main>
+  </div>
+</section>
+<!-- FIN DEL PANEL DEL ESTUDIANTE -->
 
   <footer class="border-top py-4">
     <div class="container d-flex flex-column flex-md-row
