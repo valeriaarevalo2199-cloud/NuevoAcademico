@@ -4,22 +4,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <meta
-    name="description"
-    content="Académico Fácil: plataforma para gestionar solicitudes académicas."
-  >
+  <meta name="description" content="Académico Fácil: plataforma independiente para gestionar solicitudes académicas.">
 
   <title>Académico Fácil | Inicio</title>
 
-  <!-- Bootstrap -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  >
-
-  <!-- Estilos propios -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
+
+  <style>
+    /* Ventana emergente de acceso */
+    .auth-overlay[hidden] {
+      display: none !important;
+    }
+
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(5px);
+      overflow-y: auto;
+    }
+
+    .auth-modal {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 22px;
+      padding: 34px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+      animation: authAppear 0.2s ease-out;
+    }
+
+    .auth-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .auth-close:hover {
+      background: #e2e8f0;
+    }
+
+    .auth-brand {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      margin-bottom: 18px;
+      border-radius: 15px;
+      background: #0d6efd;
+      color: white;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .auth-modal .form-control {
+      min-height: 46px;
+      border-radius: 10px;
+    }
+
+    .auth-modal .btn {
+      min-height: 46px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .auth-switch {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: #0d6efd;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .auth-message:empty {
+      display: none;
+    }
+
+    body.auth-open {
+      overflow: hidden;
+    }
+
+    @keyframes authAppear {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .auth-modal {
+        padding: 28px 22px;
+        border-radius: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .auth-modal {
+        animation: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -38,33 +145,29 @@
           data-bs-target="#menuPrincipal"
           aria-controls="menuPrincipal"
           aria-expanded="false"
-          aria-label="Abrir menú"
-        >
+          aria-label="Abrir menú">
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div
-          class="collapse navbar-collapse"
-          id="menuPrincipal"
-        >
+        <div class="collapse navbar-collapse" id="menuPrincipal">
           <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
             <li class="nav-item">
               <a class="nav-link" href="#servicios">Servicios</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#como-funciona">
-                Cómo funciona
-              </a>
+              <a class="nav-link" href="#como-funciona">Cómo funciona</a>
             </li>
             <li class="nav-item">
-              <a class="btn btn-outline-primary" href="#acceso">
+              <button class="btn btn-outline-primary"
+                type="button" data-auth="login">
                 Iniciar sesión
-              </a>
+              </button>
             </li>
             <li class="nav-item">
-              <a class="btn btn-primary" href="#acceso">
+              <button class="btn btn-primary"
+                type="button" data-auth="registro">
                 Crear cuenta
-              </a>
+              </button>
             </li>
           </ul>
         </div>
@@ -93,13 +196,13 @@
             </p>
 
             <div class="d-flex flex-wrap gap-3">
-              <a class="btn btn-primary btn-lg" href="#acceso">
+              <button class="btn btn-primary btn-lg"
+                type="button" data-auth="registro">
                 Comenzar ahora
-              </a>
-              <a
-                class="btn btn-outline-secondary btn-lg"
-                href="#como-funciona"
-              >
+              </button>
+
+              <a class="btn btn-outline-secondary btn-lg"
+                href="#como-funciona">
                 Conocer la plataforma
               </a>
             </div>
@@ -113,12 +216,8 @@
             <div class="dashboard-preview shadow-sm">
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                  <p class="small text-secondary mb-1">
-                    VISTA PREVIA
-                  </p>
-                  <h2 class="h5 fw-bold mb-0">
-                    Panel académico
-                  </h2>
+                  <p class="small text-secondary mb-1">VISTA PREVIA</p>
+                  <h2 class="h5 fw-bold mb-0">Panel académico</h2>
                 </div>
                 <span class="preview-icon">AF</span>
               </div>
@@ -137,30 +236,21 @@
               <div class="preview-request">
                 <div>
                   <strong>Certificados académicos</strong>
-                  <p class="small text-secondary mb-0">
-                    Ejemplo ilustrativo
-                  </p>
+                  <p class="small text-secondary mb-0">Ejemplo ilustrativo</p>
                 </div>
-                <span class="badge text-bg-light border">
-                  En revisión
-                </span>
+                <span class="badge text-bg-light border">En revisión</span>
               </div>
 
               <div class="preview-request">
                 <div>
                   <strong>Solicitud de información</strong>
-                  <p class="small text-secondary mb-0">
-                    Ejemplo ilustrativo
-                  </p>
+                  <p class="small text-secondary mb-0">Ejemplo ilustrativo</p>
                 </div>
-                <span class="badge text-bg-light border">
-                  Recibida
-                </span>
+                <span class="badge text-bg-light border">Recibida</span>
               </div>
 
               <p class="small text-secondary mt-3 mb-0">
-                Esta vista es ilustrativa; todavía no contiene
-                datos reales ni está conectada a una base de datos.
+                Esta vista es ilustrativa; todavía no contiene solicitudes reales.
               </p>
             </div>
           </div>
@@ -223,9 +313,7 @@
           <div class="col-md-4">
             <div class="step-number">1</div>
             <h3 class="h5 fw-bold">Regístrate</h3>
-            <p class="text-secondary">
-              Crea tu cuenta de estudiante.
-            </p>
+            <p class="text-secondary">Crea tu cuenta de estudiante.</p>
           </div>
 
           <div class="col-md-4">
@@ -246,107 +334,6 @@
         </div>
       </div>
     </section>
-
-   
-<section id="acceso" class="py-5">
-  <div class="container">
-    <div class="access-card p-4 p-lg-5">
-      <div class="text-center mb-4">
-        <p class="section-eyebrow">ÁREA DE USUARIO</p>
-        <h2 class="fw-bold">Bienvenido a Académico Fácil</h2>
-        <p class="text-secondary">
-          Crea tu cuenta o ingresa para gestionar tus solicitudes.
-        </p>
-      </div>
-
-      <div id="mensajeAuth"
-        class="alert d-none"
-        role="status"
-        aria-live="polite">
-      </div>
-
-      <div class="row g-5">
-        <div class="col-lg-6">
-          <h3 class="h4 fw-bold mb-3">Crear cuenta de estudiante</h3>
-
-          <form id="formRegistro">
-            <div class="mb-3">
-              <label for="nombres" class="form-label">Nombres</label>
-              <input id="nombres" name="nombres" type="text"
-                class="form-control" autocomplete="given-name"
-                maxlength="100" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="apellidos" class="form-label">Apellidos</label>
-              <input id="apellidos" name="apellidos" type="text"
-                class="form-control" autocomplete="family-name"
-                maxlength="100" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="correoRegistro" class="form-label">
-                Correo electrónico
-              </label>
-              <input id="correoRegistro" name="correo" type="email"
-                class="form-control" autocomplete="email"
-                maxlength="254" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="claveRegistro" class="form-label">
-                Contraseña
-              </label>
-              <input id="claveRegistro" name="password" type="password"
-                class="form-control" autocomplete="new-password"
-                minlength="8" required>
-              <div class="form-text">
-                Utiliza al menos 8 caracteres.
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">
-              Crear cuenta
-            </button>
-          </form>
-        </div>
-
-        <div class="col-lg-6">
-          <h3 class="h4 fw-bold mb-3">Iniciar sesión</h3>
-
-          <form id="formLogin">
-            <div class="mb-3">
-              <label for="correoLogin" class="form-label">
-                Correo electrónico
-              </label>
-              <input id="correoLogin" name="correo" type="email"
-                class="form-control" autocomplete="email" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="claveLogin" class="form-label">
-                Contraseña
-              </label>
-              <input id="claveLogin" name="password" type="password"
-                class="form-control" autocomplete="current-password"
-                required>
-            </div>
-
-            <button type="submit" class="btn btn-outline-primary w-100">
-              Iniciar sesión
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <p class="small text-secondary text-center mt-4 mb-0">
-        Al crear una cuenta, recibirás un correo para verificar tu dirección
-        si la confirmación de email está habilitada.
-      </p>
-    </div>
-  </div>
-</section>
-
   </main>
 
   <footer class="border-top py-4">
@@ -360,11 +347,199 @@
     </div>
   </footer>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-  ></script>
+  <!-- Ventana emergente de registro e inicio de sesión -->
+  <div id="authOverlay" class="auth-overlay" hidden>
+    <section
+      class="auth-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="authTitle"
+      aria-describedby="authDescription">
+
+      <button type="button" id="cerrarAuth"
+        class="auth-close" aria-label="Cerrar ventana">
+        &times;
+      </button>
+
+      <div class="text-center">
+        <div class="auth-brand">AF</div>
+        <h2 id="authTitle" class="h3 fw-bold">Crear cuenta</h2>
+        <p id="authDescription" class="text-secondary">
+          Regístrate para gestionar tus solicitudes académicas.
+        </p>
+      </div>
+
+      <div id="mensajeAuth"
+        class="alert auth-message d-none"
+        role="status"
+        aria-live="polite"></div>
+
+      <!-- Formulario de registro -->
+      <form id="formRegistro">
+        <div class="mb-3">
+          <label for="nombres" class="form-label">Nombres</label>
+          <input id="nombres" name="nombres" type="text"
+            class="form-control" autocomplete="given-name"
+            maxlength="100" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="apellidos" class="form-label">Apellidos</label>
+          <input id="apellidos" name="apellidos" type="text"
+            class="form-control" autocomplete="family-name"
+            maxlength="100" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="correoRegistro" class="form-label">
+            Correo electrónico
+          </label>
+          <input id="correoRegistro" name="correo" type="email"
+            class="form-control" autocomplete="email"
+            maxlength="254" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="claveRegistro" class="form-label">Contraseña</label>
+          <input id="claveRegistro" name="password" type="password"
+            class="form-control" autocomplete="new-password"
+            minlength="8" required>
+          <div class="form-text">Mínimo 8 caracteres.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+          Crear cuenta
+        </button>
+
+        <p class="text-center small mt-4 mb-0">
+          ¿Ya tienes una cuenta?
+          <button type="button" class="auth-switch"
+            data-auth="login">Inicia sesión</button>
+        </p>
+      </form>
+
+      <!-- Formulario de inicio de sesión -->
+      <form id="formLogin" hidden>
+        <div class="mb-3">
+          <label for="correoLogin" class="form-label">
+            Correo electrónico
+          </label>
+          <input id="correoLogin" name="correo" type="email"
+            class="form-control" autocomplete="email" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="claveLogin" class="form-label">Contraseña</label>
+          <input id="claveLogin" name="password" type="password"
+            class="form-control" autocomplete="current-password"
+            required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+          Iniciar sesión
+        </button>
+
+        <p class="text-center small mt-4 mb-0">
+          ¿Aún no tienes cuenta?
+          <button type="button" class="auth-switch"
+            data-auth="registro">Crear cuenta</button>
+        </p>
+      </form>
+
+      <p class="small text-secondary text-center mt-4 mb-0">
+        Protegemos el acceso mediante Supabase Auth.
+      </p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/supabase.js"></script>
-<script src="assets/js/app.js"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/app.js"></script>
+
+  <script>
+    (() => {
+      const overlay = document.getElementById("authOverlay");
+      const closeButton = document.getElementById("cerrarAuth");
+      const title = document.getElementById("authTitle");
+      const description = document.getElementById("authDescription");
+      const registerForm = document.getElementById("formRegistro");
+      const loginForm = document.getElementById("formLogin");
+      const message = document.getElementById("mensajeAuth");
+
+      let previousFocus = null;
+
+      function clearMessage() {
+        message.textContent = "";
+        message.className = "alert auth-message d-none";
+      }
+
+      function openAuth(mode) {
+        previousFocus = document.activeElement;
+        clearMessage();
+
+        const isRegister = mode === "registro";
+
+        registerForm.hidden = !isRegister;
+        loginForm.hidden = isRegister;
+
+        title.textContent = isRegister ? "Crear cuenta" : "Iniciar sesión";
+        description.textContent = isRegister
+          ? "Regístrate para gestionar tus solicitudes académicas."
+          : "Ingresa a tu cuenta para continuar.";
+
+        overlay.hidden = false;
+        document.body.classList.add("auth-open");
+
+        const firstInput = isRegister
+          ? document.getElementById("nombres")
+          : document.getElementById("correoLogin");
+
+        firstInput.focus();
+      }
+
+      function closeAuth() {
+        overlay.hidden = true;
+        document.body.classList.remove("auth-open");
+        clearMessage();
+
+        if (previousFocus && typeof previousFocus.focus === "function") {
+          previousFocus.focus();
+        }
+      }
+
+      document.querySelectorAll("[data-auth]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const mode = button.dataset.auth;
+
+          if (mode === "login" || mode === "registro") {
+            openAuth(mode);
+
+            const menu = document.getElementById("menuPrincipal");
+            if (menu && menu.classList.contains("show")) {
+              bootstrap.Collapse.getOrCreateInstance(menu).hide();
+            }
+          }
+        });
+      });
+
+      closeButton.addEventListener("click", closeAuth);
+
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+          closeAuth();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !overlay.hidden) {
+          closeAuth();
+        }
+      });
+
+      document.getElementById("currentYear").textContent =
+        new Date().getFullYear();
+    })();
+  </script>
 </body>
 </html>
