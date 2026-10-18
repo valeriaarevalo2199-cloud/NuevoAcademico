@@ -1,571 +1,988 @@
+// ============================================================
+// ACADÉMICO FÁCIL
+// Módulo de administración
+// Archivo: assets/js/administracion.js
+// ============================================================
 
-"use strict";
+(() => {
+    "use strict";
 
-const cliente = window.supabaseClient;
+    // --------------------------------------------------------
+    // 1. CONFIGURACIÓN Y ELEMENTOS HTML
+    // --------------------------------------------------------
 
-const elementos = {
-  mensaje: document.getElementById("mensajeSistema"),
-  estadoCarga: document.getElementById("estadoCarga"),
-  nombreAdmin: document.getElementById("adminNombre"),
-  btnActualizar: document.getElementById("btnActualizar"),
-  btnCerrarSesion: document.getElementById("btnCerrarSesion"),
-  total: document.getElementById("totalSolicitudes"),
-  recibidas: document.getElementById("totalRecibidas"),
-  revision: document.getElementById("totalRevision"),
-  resueltas: document.getElementById("totalResueltas"),
-  contador: document.getElementById("contadorRegistros"),
-  buscar: document.getElementById("buscarSolicitud"),
-  filtro: document.getElementById("filtroEstado"),
-  tabla: document.getElementById("tablaSolicitudes")
-};
+    const db = window.supabaseClient;
 
-let solicitudes = [];
-let funcionarios = [];
-let categorias = [];
-let asignaciones = [];
-let cargando = false;
+    const $ = (id) => document.getElementById(id);
 
-function mostrarMensaje(texto, tipo = "info") {
-  elementos.mensaje.textContent = texto;
-  elementos.mensaje.className = `alert alert-${tipo}`;
-  elementos.mensaje.classList.remove("d-none");
-}
+    const elementos = {
+        mensajeSistema: $("mensajeSistema"),
+        estadoCarga: $("estadoCarga"),
+        adminNombre: $("adminNombre"),
+        btnActualizar: $("btnActualizar"),
+        btnCerrarSesion: $("btnCerrarSesion"),
 
-function ocultarMensaje() {
-  elementos.mensaje.textContent = "";
-  elementos.mensaje.className = "alert d-none";
-}
+        totalSolicitudes: $("totalSolicitudes"),
+        totalRecibidas: $("totalRecibidas"),
+        totalRevision: $("totalRevision"),
+        totalResueltas: $("totalResueltas"),
 
-function nombreCompleto(perfil) {
-  const nombre = [
-    perfil.nombres || "",
-    perfil.apellidos || ""
-  ].join(" ").trim();
+        contadorRegistros: $("contadorRegistros"),
+        buscarSolicitud: $("buscarSolicitud"),
+        filtroEstado: $("filtroEstado"),
+        tablaSolicitudes: $("tablaSolicitudes")
+    };
 
-  return nombre || perfil.correo || "Usuario sin nombre";
-}
+    let usuarioAdmin = null;
+    let solicitudes = [];
+    let perfiles = [];
+    let categorias = [];
+    let asignaciones = [];
 
-function formatearFecha(fecha) {
-  if (!fecha) return "—";
+    let cargando = false;
 
-  const valor = new Date(fecha);
+    const ESTADOS = {
+        recibida: {
+            texto: "Recibida",
+            clase: "dash-status-recibida"
+        },
+        en_revision: {
+            texto: "En revisión",
+            clase: "dash-status-revision"
+        },
+        pendiente_informacion: {
+            texto: "Pendiente de información",
+            clase: "dash-status-pendiente"
+        },
+        resuelta: {
+            texto: "Resuelta",
+            clase: "dash-status-resuelta"
+        },
+        cerrada: {
+            texto: "Cerrada",
+            clase: "dash-status-resuelta"
+        }
+    };
 
-  if (Number.isNaN(valor.getTime())) return "—";
+    // --------------------------------------------------------
+    // 2. FUNCIONES GENERALES
+    // --------------------------------------------------------
 
-  return valor.toLocaleString("es-CO", {
-    dateStyle: "short",
-    timeStyle: "short"
-  });
-}
+    function escaparHTML(valor) {
+        return String(valor ?? "").replace(/[&<>"']/g, (caracter) => {
+            const caracteres = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            };
 
-function nombreEstado(estado) {
-  const estados = {
-    recibida: "Recibida",
-    en_revision: "En revisión",
-    pendiente_informacion: "Pendiente de información",
-    resuelta: "Resuelta",
-    cerrada: "Cerrada"
-  };
-
-  return estados[estado] || estado || "Sin estado";
-}
-
-function crearCelda(texto) {
-  const celda = document.createElement("td");
-  celda.textContent = texto ?? "—";
-  return celda;
-}
-
-function buscarCategoria(id) {
-  return categorias.find(categoria => categoria.id === id);
-}
-
-function buscarFuncionario(id) {
-  return funcionarios.find(funcionario => funcionario.id === id);
-}
-
-function buscarAsignacion(idSolicitud) {
-  return asignaciones.find(
-    asignacion => asignacion.solicitud_id === idSolicitud
-  );
-}
-
-function crearSelectFuncionario(solicitud, asignacionActual) {
-  const contenedor = document.createElement("div");
-  contenedor.className = "d-flex flex-column gap-2";
-
-  if (asignacionActual) {
-    const funcionario = buscarFuncionario(
-      asignacionActual.funcionario_id
-    );
-
-    const nombre = funcionario
-      ? nombreCompleto(funcionario)
-      : "Funcionario asignado";
-
-    const etiqueta = document.createElement("span");
-    etiqueta.className = "fw-semibold";
-    etiqueta.textContent = nombre;
-
-    const nota = document.createElement("small");
-    nota.className = "text-muted";
-    nota.textContent = "Esta solicitud ya tiene una asignación.";
-
-    contenedor.append(etiqueta, nota);
-    return contenedor;
-  }
-
-  if (funcionarios.length === 0) {
-    const aviso = document.createElement("span");
-    aviso.className = "text-danger small";
-    aviso.textContent = "No hay funcionarios disponibles.";
-    contenedor.appendChild(aviso);
-    return contenedor;
-  }
-
-  const selector = document.createElement("select");
-  selector.className = "form-select form-select-sm";
-  selector.setAttribute("aria-label", "Seleccionar funcionario");
-
-  const opcionInicial = document.createElement("option");
-  opcionInicial.value = "";
-  opcionInicial.textContent = "Selecciona un funcionario";
-  selector.appendChild(opcionInicial);
-
-  funcionarios.forEach(funcionario => {
-    const opcion = document.createElement("option");
-    opcion.value = funcionario.id;
-    opcion.textContent = nombreCompleto(funcionario);
-    selector.appendChild(opcion);
-  });
-
-  const boton = document.createElement("button");
-  boton.type = "button";
-  boton.className = "btn btn-primary btn-sm";
-  boton.textContent = "Asignar funcionario";
-
-  boton.addEventListener("click", async () => {
-    const funcionarioId = selector.value;
-
-    if (!funcionarioId) {
-      mostrarMensaje(
-        "Selecciona un funcionario antes de asignar la solicitud.",
-        "warning"
-      );
-      return;
+            return caracteres[caracter];
+        });
     }
 
-    if (cargando) return;
+    function mostrarMensaje(texto, tipo = "info") {
+        if (!elementos.mensajeSistema) {
+            console.log(texto);
+            return;
+        }
 
-    const funcionarioElegido = buscarFuncionario(funcionarioId);
-
-    if (!funcionarioElegido) {
-      mostrarMensaje(
-        "El funcionario seleccionado no está disponible. Actualiza la información.",
-        "warning"
-      );
-      return;
+        elementos.mensajeSistema.textContent = texto;
+        elementos.mensajeSistema.className = `alert alert-${tipo}`;
+        elementos.mensajeSistema.classList.remove("d-none");
     }
 
-    const confirmar = window.confirm(
-      `¿Deseas asignar la solicitud ${solicitud.radicado} a ` +
-      `${nombreCompleto(funcionarioElegido)}?`
-    );
+    function ocultarMensaje() {
+        if (!elementos.mensajeSistema) return;
 
-    if (!confirmar) return;
+        elementos.mensajeSistema.textContent = "";
+        elementos.mensajeSistema.classList.add("d-none");
+    }
 
-    await asignarSolicitud(solicitud, funcionarioId, boton);
-  });
+    function mostrarCarga(texto = "Cargando información...") {
+        if (elementos.estadoCarga) {
+            elementos.estadoCarga.textContent = texto;
+            elementos.estadoCarga.classList.remove("d-none");
+        }
+    }
 
-  contenedor.append(selector, boton);
-  return contenedor;
-}
+    function ocultarCarga() {
+        if (elementos.estadoCarga) {
+            elementos.estadoCarga.textContent = "";
+            elementos.estadoCarga.classList.add("d-none");
+        }
+    }
 
-function renderizarTabla() {
-  const busqueda = elementos.buscar.value.trim().toLowerCase();
-  const estadoSeleccionado = elementos.filtro.value;
+    function formatearFecha(fecha) {
+        if (!fecha) return "Sin fecha";
 
-  const filtradas = solicitudes.filter(solicitud => {
-    const perfil = perfilesEstudiantes.get(solicitud.estudiante_id);
-    const categoria = buscarCategoria(solicitud.categoria_id);
+        const valor = new Date(fecha);
 
-    const texto = [
-      solicitud.radicado,
-      perfil ? nombreCompleto(perfil) : "",
-      categoria?.nombre || "",
-      solicitud.asunto || "",
-      solicitud.descripcion || ""
-    ].join(" ").toLowerCase();
+        if (Number.isNaN(valor.getTime())) {
+            return "Sin fecha";
+        }
 
-    const coincideBusqueda = texto.includes(busqueda);
-    const coincideEstado =
-      !estadoSeleccionado || solicitud.estado === estadoSeleccionado;
+        return valor.toLocaleString("es-CO", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+    }
 
-    return coincideBusqueda && coincideEstado;
-  });
+    function obtenerNombreCompleto(perfil) {
+        if (!perfil) return "Usuario no disponible";
 
-  elementos.tabla.replaceChildren();
-  elementos.contador.textContent = `Registros: ${filtradas.length}`;
+        const nombre = [
+            perfil.nombres,
+            perfil.apellidos
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
 
-  if (filtradas.length === 0) {
-    const fila = document.createElement("tr");
-    const celda = crearCelda(
-      solicitudes.length
-        ? "No hay solicitudes que coincidan con los filtros."
-        : "Todavía no hay solicitudes registradas."
-    );
+        return nombre || perfil.correo || "Usuario sin nombre";
+    }
 
-    celda.colSpan = 7;
-    celda.className = "text-center text-muted py-4";
-    fila.appendChild(celda);
-    elementos.tabla.appendChild(fila);
-    return;
-  }
+    function obtenerEstado(estado) {
+        return ESTADOS[estado] || {
+            texto: estado || "Sin estado",
+            clase: "dash-status-recibida"
+        };
+    }
 
-  filtradas.forEach(solicitud => {
-    const fila = document.createElement("tr");
+    function obtenerPerfil(id) {
+        return perfiles.find((perfil) => perfil.id === id);
+    }
 
-    const estudiante = perfilesEstudiantes.get(solicitud.estudiante_id);
-    const categoria = buscarCategoria(solicitud.categoria_id);
-    const asignacion = buscarAsignacion(solicitud.id);
+    function obtenerCategoria(id) {
+        return categorias.find((categoria) => categoria.id === id);
+    }
 
-    fila.appendChild(crearCelda(solicitud.radicado));
-    fila.appendChild(
-      crearCelda(estudiante ? nombreCompleto(estudiante) : "Estudiante")
-    );
-    fila.appendChild(crearCelda(categoria?.nombre || "Sin categoría"));
-    fila.appendChild(crearCelda(solicitud.asunto || "Sin asunto"));
-
-    const celdaEstado = document.createElement("td");
-    const insignia = document.createElement("span");
-    insignia.className = "badge text-bg-secondary";
-    insignia.textContent = nombreEstado(solicitud.estado);
-    celdaEstado.appendChild(insignia);
-    fila.appendChild(celdaEstado);
-
-    fila.appendChild(crearCelda(formatearFecha(solicitud.created_at)));
-
-    const celdaFuncionario = document.createElement("td");
-    celdaFuncionario.appendChild(
-      crearSelectFuncionario(solicitud, asignacion)
-    );
-    fila.appendChild(celdaFuncionario);
-
-    elementos.tabla.appendChild(fila);
-  });
-}
-
-const perfilesEstudiantes = new Map();
-
-function actualizarResumen() {
-  elementos.total.textContent = solicitudes.length;
-
-  elementos.recibidas.textContent = solicitudes.filter(
-    solicitud => solicitud.estado === "recibida"
-  ).length;
-
-  elementos.revision.textContent = solicitudes.filter(
-    solicitud => solicitud.estado === "en_revision"
-  ).length;
-
-  elementos.resueltas.textContent = solicitudes.filter(
-    solicitud => solicitud.estado === "resuelta"
-  ).length;
-}
-
-async function verificarAdministrador() {
-  const { data: sesionData, error: errorSesion } =
-    await cliente.auth.getSession();
-
-  if (errorSesion) throw errorSesion;
-
-  const usuario = sesionData.session?.user;
-
-  if (!usuario) {
-    window.location.href = "login.html";
-    return null;
-  }
-
-  const { data: perfil, error } = await cliente
-    .from("perfiles")
-    .select("id, nombres, apellidos, correo, rol")
-    .eq("id", usuario.id)
-    .maybeSingle();
-
-  if (error) throw error;
-
-  if (!perfil || perfil.rol !== "administrador") {
-    mostrarMensaje(
-      "No tienes permisos para acceder al módulo administrativo.",
-      "danger"
-    );
-
-    await cliente.auth.signOut();
-    window.location.href = "login.html";
-    return null;
-  }
-
-  elementos.nombreAdmin.textContent = nombreCompleto(perfil);
-  return usuario;
-}
-
-async function cargarDatos() {
-  if (cargando) return;
-
-  cargando = true;
-  elementos.btnActualizar.disabled = true;
-  elementos.estadoCarga.textContent = "Consultando Supabase...";
-  ocultarMensaje();
-
-  try {
-    const resultados = await Promise.all([
-      cliente
-        .from("solicitudes")
-        .select(
-          "id, radicado, estudiante_id, categoria_id, asunto, descripcion, estado, created_at"
-        )
-        .order("created_at", { ascending: false }),
-
-      cliente
-        .from("perfiles")
-        .select("id, nombres, apellidos, correo, rol")
-        .eq("rol", "funcionario"),
-
-      cliente
-        .from("categorias")
-        .select("id, nombre, activa"),
-
-      cliente
-        .from("asignaciones")
-        .select("id, solicitud_id, funcionario_id, asignado_por, created_at")
-    ]);
-
-    const nombresConsultas = [
-      "solicitudes",
-      "perfiles de funcionarios",
-      "categorías",
-      "asignaciones"
-    ];
-
-    for (let i = 0; i < resultados.length; i++) {
-      if (resultados[i].error) {
-        console.error(
-          `Error consultando ${nombresConsultas[i]}:`,
-          resultados[i].error
+    function obtenerAsignacion(solicitudId) {
+        return asignaciones.find(
+            (asignacion) => asignacion.solicitud_id === solicitudId
         );
-        throw new Error(
-          `No se pudo consultar ${nombresConsultas[i]}: ` +
-          resultados[i].error.message
+    }
+
+    function obtenerFuncionarioAsignado(solicitudId) {
+        const asignacion = obtenerAsignacion(solicitudId);
+
+        if (!asignacion) return null;
+
+        return obtenerPerfil(asignacion.funcionario_id);
+    }
+
+    function obtenerFuncionariosDisponibles() {
+        return perfiles.filter(
+            (perfil) => perfil.rol === "funcionario"
         );
-      }
     }
 
-    solicitudes = resultados[0].data || [];
-    funcionarios = resultados[1].data || [];
-    categorias = (resultados[2].data || []).filter(
-      categoria => categoria.activa !== false
-    );
-    asignaciones = resultados[3].data || [];
+    // --------------------------------------------------------
+    // 3. VALIDAR SESIÓN Y ROL DEL ADMINISTRADOR
+    // --------------------------------------------------------
 
-    const idsEstudiantes = [
-      ...new Set(solicitudes.map(solicitud => solicitud.estudiante_id))
-    ].filter(Boolean);
+    async function validarAdministrador() {
+        if (!db) {
+            mostrarMensaje(
+                "No se pudo conectar con Supabase. Verifica el archivo supabase.js y que la librería de Supabase esté cargada.",
+                "danger"
+            );
+            return false;
+        }
 
-    perfilesEstudiantes.clear();
+        const { data, error } = await db.auth.getSession();
 
-    if (idsEstudiantes.length > 0) {
-      const { data: estudiantes, error: errorEstudiantes } = await cliente
-        .from("perfiles")
-        .select("id, nombres, apellidos, correo, rol")
-        .in("id", idsEstudiantes);
+        if (error) {
+            console.error("Error consultando la sesión:", error);
 
-      if (errorEstudiantes) {
-        console.error("Error consultando estudiantes:", errorEstudiantes);
-        throw new Error(
-          "No se pudieron consultar los perfiles de los estudiantes: " +
-          errorEstudiantes.message
+            mostrarMensaje(
+                "No fue posible verificar la sesión. Intenta iniciar sesión nuevamente.",
+                "danger"
+            );
+
+            return false;
+        }
+
+        const sesion = data?.session;
+
+        if (!sesion?.user) {
+            window.location.href = "login.html";
+            return false;
+        }
+
+        const { data: perfil, error: errorPerfil } = await db
+            .from("perfiles")
+            .select("id, nombres, apellidos, correo, rol")
+            .eq("id", sesion.user.id)
+            .maybeSingle();
+
+        if (errorPerfil) {
+            console.error("Error consultando el perfil:", errorPerfil);
+
+            mostrarMensaje(
+                "No se pudo consultar tu perfil. Verifica los permisos de lectura de la tabla perfiles en Supabase.",
+                "danger"
+            );
+
+            return false;
+        }
+
+        if (!perfil || perfil.rol !== "administrador") {
+            mostrarMensaje(
+                "Tu cuenta no tiene permisos para acceder al módulo de administración.",
+                "danger"
+            );
+
+            await db.auth.signOut();
+            window.location.href = "login.html";
+
+            return false;
+        }
+
+        usuarioAdmin = sesion.user;
+
+        if (elementos.adminNombre) {
+            elementos.adminNombre.textContent =
+                obtenerNombreCompleto(perfil);
+        }
+
+        return true;
+    }
+
+    // --------------------------------------------------------
+    // 4. CARGAR SOLICITUDES, PERFILES, CATEGORÍAS Y ASIGNACIONES
+    // --------------------------------------------------------
+
+    async function cargarInformacion() {
+        if (cargando) return;
+
+        cargando = true;
+        ocultarMensaje();
+        mostrarCarga("Cargando solicitudes y funcionarios...");
+
+        if (elementos.btnActualizar) {
+            elementos.btnActualizar.disabled = true;
+        }
+
+        try {
+            // Consultar las solicitudes
+            const resultadoSolicitudes = await db
+                .from("solicitudes")
+                .select(`
+                    id,
+                    radicado,
+                    estudiante_id,
+                    categoria_id,
+                    asunto,
+                    descripcion,
+                    estado,
+                    created_at,
+                    updated_at
+                `)
+                .order("created_at", { ascending: false });
+
+            if (resultadoSolicitudes.error) {
+                throw new Error(
+                    "No fue posible cargar las solicitudes: " +
+                    resultadoSolicitudes.error.message
+                );
+            }
+
+            solicitudes = resultadoSolicitudes.data || [];
+
+            // Consultar perfiles, categorías y asignaciones
+            const [
+                resultadoPerfiles,
+                resultadoCategorias,
+                resultadoAsignaciones
+            ] = await Promise.all([
+                db
+                    .from("perfiles")
+                    .select("id, nombres, apellidos, correo, rol"),
+
+                db
+                    .from("categorias")
+                    .select("id, nombre, activa"),
+
+                db
+                    .from("asignaciones")
+                    .select(`
+                        id,
+                        solicitud_id,
+                        funcionario_id,
+                        asignado_por,
+                        created_at
+                    `)
+            ]);
+
+            perfiles = [];
+            categorias = [];
+            asignaciones = [];
+
+            const advertencias = [];
+
+            if (resultadoPerfiles.error) {
+                console.error(
+                    "Error cargando perfiles:",
+                    resultadoPerfiles.error
+                );
+
+                advertencias.push(
+                    "No se pudieron consultar los perfiles. Revisa los permisos de lectura de perfiles."
+                );
+            } else {
+                perfiles = resultadoPerfiles.data || [];
+            }
+
+            if (resultadoCategorias.error) {
+                console.error(
+                    "Error cargando categorías:",
+                    resultadoCategorias.error
+                );
+
+                advertencias.push(
+                    "No se pudieron consultar las categorías."
+                );
+            } else {
+                categorias = resultadoCategorias.data || [];
+            }
+
+            if (resultadoAsignaciones.error) {
+                console.error(
+                    "Error cargando asignaciones:",
+                    resultadoAsignaciones.error
+                );
+
+                advertencias.push(
+                    "No se pudieron consultar las asignaciones. Revisa las políticas RLS de asignaciones."
+                );
+            } else {
+                asignaciones = resultadoAsignaciones.data || [];
+            }
+
+            actualizarEstadisticas();
+            renderizarTabla();
+
+            if (advertencias.length > 0) {
+                mostrarMensaje(advertencias.join(" "), "warning");
+            } else if (solicitudes.length === 0) {
+                mostrarMensaje(
+                    "La conexión funciona, pero todavía no hay solicitudes registradas.",
+                    "info"
+                );
+            } else {
+                mostrarMensaje(
+                    "Información actualizada correctamente.",
+                    "success"
+                );
+            }
+
+        } catch (error) {
+            console.error("Error general del administrador:", error);
+
+            mostrarMensaje(
+                error.message ||
+                "Ocurrió un error al cargar la información.",
+                "danger"
+            );
+
+            if (elementos.tablaSolicitudes) {
+                elementos.tablaSolicitudes.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            No fue posible cargar las solicitudes.
+                            Revisa el mensaje de error e inténtalo nuevamente.
+                        </td>
+                    </tr>
+                `;
+            }
+
+        } finally {
+            cargando = false;
+            ocultarCarga();
+
+            if (elementos.btnActualizar) {
+                elementos.btnActualizar.disabled = false;
+            }
+        }
+    }
+
+    // --------------------------------------------------------
+    // 5. ACTUALIZAR LAS TARJETAS DE ESTADÍSTICAS
+    // --------------------------------------------------------
+
+    function actualizarEstadisticas() {
+        const total = solicitudes.length;
+
+        const recibidas = solicitudes.filter(
+            (solicitud) => solicitud.estado === "recibida"
+        ).length;
+
+        const enRevision = solicitudes.filter(
+            (solicitud) => solicitud.estado === "en_revision"
+        ).length;
+
+        const resueltas = solicitudes.filter(
+            (solicitud) =>
+                solicitud.estado === "resuelta" ||
+                solicitud.estado === "cerrada"
+        ).length;
+
+        if (elementos.totalSolicitudes) {
+            elementos.totalSolicitudes.textContent = total;
+        }
+
+        if (elementos.totalRecibidas) {
+            elementos.totalRecibidas.textContent = recibidas;
+        }
+
+        if (elementos.totalRevision) {
+            elementos.totalRevision.textContent = enRevision;
+        }
+
+        if (elementos.totalResueltas) {
+            elementos.totalResueltas.textContent = resueltas;
+        }
+    }
+
+    // --------------------------------------------------------
+    // 6. BUSCAR Y FILTRAR SOLICITUDES
+    // --------------------------------------------------------
+
+    function obtenerSolicitudesFiltradas() {
+        const busqueda = (
+            elementos.buscarSolicitud?.value || ""
+        ).trim().toLowerCase();
+
+        const estadoSeleccionado =
+            elementos.filtroEstado?.value || "";
+
+        return solicitudes.filter((solicitud) => {
+            const estudiante = obtenerPerfil(
+                solicitud.estudiante_id
+            );
+
+            const categoria = obtenerCategoria(
+                solicitud.categoria_id
+            );
+
+            const funcionario = obtenerFuncionarioAsignado(
+                solicitud.id
+            );
+
+            const nombreEstudiante =
+                obtenerNombreCompleto(estudiante).toLowerCase();
+
+            const nombreFuncionario =
+                obtenerNombreCompleto(funcionario).toLowerCase();
+
+            const nombreCategoria =
+                (categoria?.nombre || "").toLowerCase();
+
+            const radicado =
+                (solicitud.radicado || "").toLowerCase();
+
+            const asunto =
+                (solicitud.asunto || "").toLowerCase();
+
+            const coincideBusqueda =
+                !busqueda ||
+                radicado.includes(busqueda) ||
+                asunto.includes(busqueda) ||
+                nombreEstudiante.includes(busqueda) ||
+                nombreFuncionario.includes(busqueda) ||
+                nombreCategoria.includes(busqueda);
+
+            const coincideEstado =
+                !estadoSeleccionado ||
+                solicitud.estado === estadoSeleccionado;
+
+            return coincideBusqueda && coincideEstado;
+        });
+    }
+
+    // --------------------------------------------------------
+    // 7. CONSTRUIR LA TABLA DE SOLICITUDES
+    // --------------------------------------------------------
+
+    function renderizarTabla() {
+        if (!elementos.tablaSolicitudes) {
+            console.error(
+                'No se encontró el elemento HTML con ID "tablaSolicitudes".'
+            );
+            return;
+        }
+
+        const lista = obtenerSolicitudesFiltradas();
+
+        if (elementos.contadorRegistros) {
+            elementos.contadorRegistros.textContent =
+                `${lista.length} solicitud(es)`;
+        }
+
+        if (lista.length === 0) {
+            elementos.tablaSolicitudes.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        No se encontraron solicitudes con los filtros seleccionados.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        elementos.tablaSolicitudes.innerHTML = lista.map(
+            (solicitud) => {
+                const estudiante = obtenerPerfil(
+                    solicitud.estudiante_id
+                );
+
+                const categoria = obtenerCategoria(
+                    solicitud.categoria_id
+                );
+
+                const asignacion = obtenerAsignacion(
+                    solicitud.id
+                );
+
+                const funcionario = obtenerFuncionarioAsignado(
+                    solicitud.id
+                );
+
+                const estado = obtenerEstado(solicitud.estado);
+
+                const nombreEstudiante =
+                    estudiante
+                        ? obtenerNombreCompleto(estudiante)
+                        : "Estudiante no disponible";
+
+                const nombreCategoria =
+                    categoria?.nombre || "Sin categoría";
+
+                const nombreFuncionario =
+                    funcionario
+                        ? obtenerNombreCompleto(funcionario)
+                        : null;
+
+                const controlAsignacion = crearControlAsignacion(
+                    solicitud,
+                    asignacion,
+                    funcionario
+                );
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="dash-radicado">
+                                ${escaparHTML(solicitud.radicado || "Sin radicado")}
+                            </span>
+                        </td>
+
+                        <td>
+                            <strong>
+                                ${escaparHTML(nombreEstudiante)}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${escaparHTML(nombreCategoria)}
+                        </td>
+
+                        <td>
+                            ${escaparHTML(solicitud.asunto || "Sin asunto")}
+                        </td>
+
+                        <td>
+                            <span class="dash-status ${escaparHTML(estado.clase)}">
+                                ${escaparHTML(estado.texto)}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${escaparHTML(formatearFecha(solicitud.created_at))}
+                        </td>
+
+                        <td>
+                            ${controlAsignacion}
+                        </td>
+
+                        <td>
+                            <button
+                                type="button"
+                                class="dash-button-outline btn-ver-detalle"
+                                data-solicitud-id="${escaparHTML(solicitud.id)}"
+                            >
+                                Ver detalle
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        ).join("");
+    }
+
+    // --------------------------------------------------------
+    // 8. CONTROL PARA ASIGNAR UN FUNCIONARIO
+    // --------------------------------------------------------
+
+    function crearControlAsignacion(
+        solicitud,
+        asignacion,
+        funcionario
+    ) {
+        // Si ya está asignada, mostrar el funcionario actual.
+        // Esta versión evita crear asignaciones duplicadas.
+        if (asignacion) {
+            const nombre = funcionario
+                ? obtenerNombreCompleto(funcionario)
+                : "Funcionario asignado";
+
+            return `
+                <div class="d-flex flex-column gap-1">
+                    <span class="fw-semibold">
+                        ${escaparHTML(nombre)}
+                    </span>
+                    <small class="text-muted">
+                        Asignación registrada
+                    </small>
+                </div>
+            `;
+        }
+
+        const funcionarios = obtenerFuncionariosDisponibles();
+
+        if (funcionarios.length === 0) {
+            return `
+                <span class="text-muted">
+                    No hay funcionarios disponibles
+                </span>
+            `;
+        }
+
+        const opciones = funcionarios.map((perfil) => `
+            <option value="${escaparHTML(perfil.id)}">
+                ${escaparHTML(obtenerNombreCompleto(perfil))}
+            </option>
+        `).join("");
+
+        return `
+            <div class="d-flex flex-column gap-2">
+                <select
+                    class="form-select form-select-sm selector-funcionario"
+                    data-solicitud-id="${escaparHTML(solicitud.id)}"
+                    aria-label="Seleccionar funcionario para ${escaparHTML(solicitud.radicado || "solicitud")}"
+                >
+                    <option value="">Seleccionar funcionario</option>
+                    ${opciones}
+                </select>
+
+                <button
+                    type="button"
+                    class="dash-button btn-asignar-funcionario"
+                    data-solicitud-id="${escaparHTML(solicitud.id)}"
+                >
+                    Asignar solicitud
+                </button>
+            </div>
+        `;
+    }
+
+    // --------------------------------------------------------
+    // 9. GUARDAR ASIGNACIÓN EN SUPABASE
+    // --------------------------------------------------------
+
+    async function asignarFuncionario(solicitudId, funcionarioId, boton) {
+        if (!usuarioAdmin) {
+            mostrarMensaje(
+                "Tu sesión de administrador no está disponible. Inicia sesión nuevamente.",
+                "danger"
+            );
+            return;
+        }
+
+        if (!solicitudId || !funcionarioId) {
+            mostrarMensaje(
+                "Selecciona un funcionario antes de realizar la asignación.",
+                "warning"
+            );
+            return;
+        }
+
+        const funcionario = obtenerPerfil(funcionarioId);
+
+        if (!funcionario || funcionario.rol !== "funcionario") {
+            mostrarMensaje(
+                "El perfil seleccionado no corresponde a un funcionario válido.",
+                "danger"
+            );
+            return;
+        }
+
+        const solicitudExiste = solicitudes.some(
+            (solicitud) => solicitud.id === solicitudId
         );
-      }
 
-      (estudiantes || []).forEach(estudiante => {
-        perfilesEstudiantes.set(estudiante.id, estudiante);
-      });
+        if (!solicitudExiste) {
+            mostrarMensaje(
+                "No se encontró la solicitud que intentas asignar.",
+                "danger"
+            );
+            return;
+        }
+
+        if (obtenerAsignacion(solicitudId)) {
+            mostrarMensaje(
+                "Esta solicitud ya tiene una asignación registrada. Actualiza la información para verificarla.",
+                "warning"
+            );
+
+            await cargarInformacion();
+            return;
+        }
+
+        const confirmar = window.confirm(
+            `¿Deseas asignar esta solicitud a ${obtenerNombreCompleto(funcionario)}?`
+        );
+
+        if (!confirmar) return;
+
+        const textoOriginal = boton?.textContent;
+
+        if (boton) {
+            boton.disabled = true;
+            boton.textContent = "Asignando...";
+        }
+
+        try {
+            // Volver a comprobar la asignación antes de insertar.
+            // La restricción única en la base de datos también es
+            // recomendable para evitar duplicados simultáneos.
+            const { data: asignacionExistente, error: errorConsulta } =
+                await db
+                    .from("asignaciones")
+                    .select("id")
+                    .eq("solicitud_id", solicitudId)
+                    .maybeSingle();
+
+            if (errorConsulta) {
+                throw new Error(
+                    "No fue posible verificar si la solicitud ya está asignada: " +
+                    errorConsulta.message
+                );
+            }
+
+            if (asignacionExistente) {
+                mostrarMensaje(
+                    "La solicitud ya fue asignada. Actualiza la tabla para ver el funcionario responsable.",
+                    "warning"
+                );
+
+                await cargarInformacion();
+                return;
+            }
+
+            const { error: errorInsercion } = await db
+                .from("asignaciones")
+                .insert({
+                    solicitud_id: solicitudId,
+                    funcionario_id: funcionarioId,
+                    asignado_por: usuarioAdmin.id
+                });
+
+            if (errorInsercion) {
+                throw new Error(
+                    "No se pudo guardar la asignación: " +
+                    errorInsercion.message
+                );
+            }
+
+            mostrarMensaje(
+                `Solicitud asignada correctamente a ${obtenerNombreCompleto(funcionario)}.`,
+                "success"
+            );
+
+            await cargarInformacion();
+
+        } catch (error) {
+            console.error("Error al asignar funcionario:", error);
+
+            mostrarMensaje(
+                error.message ||
+                "Ocurrió un error al asignar el funcionario.",
+                "danger"
+            );
+
+        } finally {
+            if (boton) {
+                boton.disabled = false;
+                boton.textContent = textoOriginal || "Asignar solicitud";
+            }
+        }
     }
 
-    actualizarResumen();
-    renderizarTabla();
+    // --------------------------------------------------------
+    // 10. VER DETALLE DE UNA SOLICITUD
+    // --------------------------------------------------------
 
-    elementos.estadoCarga.textContent =
-      `Se cargaron ${solicitudes.length} solicitudes y ` +
-      `${funcionarios.length} funcionarios.`;
+    function verDetalleSolicitud(solicitudId) {
+        const solicitud = solicitudes.find(
+            (item) => item.id === solicitudId
+        );
 
-    if (funcionarios.length === 0) {
-      mostrarMensaje(
-        "Las solicitudes se cargaron, pero no se encontraron funcionarios. " +
-        "Verifica que exista al menos un perfil con rol exactamente igual a " +
-        "'funcionario' y que el administrador tenga permiso para consultar perfiles.",
-        "warning"
-      );
-    } else {
-      mostrarMensaje(
-        "Información cargada correctamente. Funcionarios disponibles: " +
-        funcionarios.length + ".",
-        "success"
-      );
-    }
-  } catch (error) {
-    console.error("Error al cargar administración:", error);
+        if (!solicitud) {
+            mostrarMensaje(
+                "No se encontró la solicitud seleccionada.",
+                "warning"
+            );
+            return;
+        }
 
-    elementos.estadoCarga.textContent = "No se pudo cargar toda la información.";
+        const estudiante = obtenerPerfil(solicitud.estudiante_id);
+        const categoria = obtenerCategoria(solicitud.categoria_id);
+        const funcionario = obtenerFuncionarioAsignado(solicitud.id);
+        const estado = obtenerEstado(solicitud.estado);
 
-    mostrarMensaje(
-      error.message || "Ocurrió un error al consultar Supabase.",
-      "danger"
-    );
+        const detalle = [
+            `Radicado: ${solicitud.radicado || "Sin radicado"}`,
+            `Estudiante: ${obtenerNombreCompleto(estudiante)}`,
+            `Categoría: ${categoria?.nombre || "Sin categoría"}`,
+            `Asunto: ${solicitud.asunto || "Sin asunto"}`,
+            `Estado: ${estado.texto}`,
+            `Fecha de creación: ${formatearFecha(solicitud.created_at)}`,
+            `Funcionario asignado: ${
+                funcionario
+                    ? obtenerNombreCompleto(funcionario)
+                    : "Sin asignar"
+            }`,
+            "",
+            "Descripción:",
+            solicitud.descripcion || "No se registró una descripción."
+        ].join("\n");
 
-    elementos.tabla.replaceChildren();
-
-    const fila = document.createElement("tr");
-    const celda = crearCelda(
-      "No se pudieron cargar los datos. Revisa el mensaje anterior."
-    );
-    celda.colSpan = 7;
-    celda.className = "text-center text-danger py-4";
-    fila.appendChild(celda);
-    elementos.tabla.appendChild(fila);
-  } finally {
-    cargando = false;
-    elementos.btnActualizar.disabled = false;
-  }
-}
-
-async function asignarSolicitud(solicitud, funcionarioId, boton) {
-  boton.disabled = true;
-  boton.textContent = "Asignando...";
-  ocultarMensaje();
-
-  try {
-    // Verificar que la solicitud no haya sido asignada previamente.
-    const { data: existentes, error: errorExistentes } = await cliente
-      .from("asignaciones")
-      .select("id, funcionario_id")
-      .eq("solicitud_id", solicitud.id);
-
-    if (errorExistentes) {
-      throw new Error(
-        "No se pudo verificar si la solicitud ya está asignada: " +
-        errorExistentes.message
-      );
+        window.alert(detalle);
     }
 
-    if (existentes && existentes.length > 0) {
-      await cargarDatos();
+    // --------------------------------------------------------
+    // 11. EVENTOS DE LA INTERFAZ
+    // --------------------------------------------------------
 
-      mostrarMensaje(
-        "Esta solicitud ya tiene una asignación. Se actualizó la información.",
-        "warning"
-      );
-      return;
+    function registrarEventos() {
+        if (elementos.btnActualizar) {
+            elementos.btnActualizar.addEventListener(
+                "click",
+                cargarInformacion
+            );
+        }
+
+        if (elementos.buscarSolicitud) {
+            elementos.buscarSolicitud.addEventListener(
+                "input",
+                renderizarTabla
+            );
+        }
+
+        if (elementos.filtroEstado) {
+            elementos.filtroEstado.addEventListener(
+                "change",
+                renderizarTabla
+            );
+        }
+
+        if (elementos.btnCerrarSesion) {
+            elementos.btnCerrarSesion.addEventListener(
+                "click",
+                async () => {
+                    if (!window.confirm("¿Deseas cerrar la sesión?")) {
+                        return;
+                    }
+
+                    const { error } = await db.auth.signOut();
+
+                    if (error) {
+                        console.error(
+                            "Error al cerrar sesión:",
+                            error
+                        );
+
+                        mostrarMensaje(
+                            "No fue posible cerrar la sesión. Inténtalo nuevamente.",
+                            "danger"
+                        );
+
+                        return;
+                    }
+
+                    window.location.href = "login.html";
+                }
+            );
+        }
+
+        // Delegación de eventos para los botones generados en la tabla.
+        if (elementos.tablaSolicitudes) {
+            elementos.tablaSolicitudes.addEventListener(
+                "click",
+                async (evento) => {
+                    const botonAsignar = evento.target.closest(
+                        ".btn-asignar-funcionario"
+                    );
+
+                    if (botonAsignar) {
+                        const solicitudId =
+                            botonAsignar.dataset.solicitudId;
+
+                        const selector = Array.from(
+                            elementos.tablaSolicitudes.querySelectorAll(
+                                ".selector-funcionario"
+                            )
+                        ).find(
+                            (elemento) =>
+                                elemento.dataset.solicitudId === solicitudId
+                        );
+
+                        const funcionarioId = selector?.value;
+
+                        await asignarFuncionario(
+                            solicitudId,
+                            funcionarioId,
+                            botonAsignar
+                        );
+
+                        return;
+                    }
+
+                    const botonDetalle = evento.target.closest(
+                        ".btn-ver-detalle"
+                    );
+
+                    if (botonDetalle) {
+                        verDetalleSolicitud(
+                            botonDetalle.dataset.solicitudId
+                        );
+                    }
+                }
+            );
+        }
     }
 
-    const { data: usuarioData, error: errorUsuario } =
-      await cliente.auth.getUser();
+    // --------------------------------------------------------
+    // 12. INICIAR EL MÓDULO
+    // --------------------------------------------------------
 
-    if (errorUsuario) throw errorUsuario;
+    async function iniciarModulo() {
+        registrarEventos();
 
-    const usuario = usuarioData.user;
+        const esAdministrador = await validarAdministrador();
 
-    if (!usuario) {
-      throw new Error("La sesión expiró. Inicia sesión nuevamente.");
+        if (!esAdministrador) return;
+
+        await cargarInformacion();
     }
 
-    const { error: errorInsertar } = await cliente
-      .from("asignaciones")
-      .insert({
-        solicitud_id: solicitud.id,
-        funcionario_id: funcionarioId,
-        asignado_por: usuario.id
-      });
-
-    if (errorInsertar) {
-      console.error("Error de Supabase al asignar:", errorInsertar);
-
-      throw new Error(
-        "Supabase no permitió guardar la asignación: " +
-        errorInsertar.message +
-        (errorInsertar.code ? ` (código ${errorInsertar.code})` : "")
-      );
-    }
-
-    await cargarDatos();
-
-    mostrarMensaje(
-      `La solicitud ${solicitud.radicado} fue asignada correctamente.`,
-      "success"
-    );
-  } catch (error) {
-    console.error("Error al asignar funcionario:", error);
-
-    mostrarMensaje(
-      error.message || "No se pudo asignar el funcionario.",
-      "danger"
-    );
-  } finally {
-    boton.disabled = false;
-    boton.textContent = "Asignar funcionario";
-  }
-}
-
-async function cerrarSesion() {
-  elementos.btnCerrarSesion.disabled = true;
-
-  const { error } = await cliente.auth.signOut();
-
-  if (error) {
-    console.error("Error al cerrar sesión:", error);
-    mostrarMensaje(
-      "No se pudo cerrar la sesión: " + error.message,
-      "danger"
-    );
-    elementos.btnCerrarSesion.disabled = false;
-    return;
-  }
-
-  window.location.href = "login.html";
-}
-
-async function iniciarModulo() {
-  if (!cliente) {
-    mostrarMensaje(
-      "No se encontró el cliente de Supabase. Revisa el orden de los scripts en el HTML.",
-      "danger"
-    );
-    return;
-  }
-
-  try {
-    const usuario = await verificarAdministrador();
-
-    if (!usuario) return;
-
-    elementos.btnActualizar.addEventListener("click", cargarDatos);
-    elementos.buscar.addEventListener("input", renderizarTabla);
-    elementos.filtro.addEventListener("change", renderizarTabla);
-    elementos.btnCerrarSesion.addEventListener("click", cerrarSesion);
-
-    await cargarDatos();
-  } catch (error) {
-    console.error("Error al iniciar el módulo:", error);
-
-    mostrarMensaje(
-      "No se pudo iniciar el módulo administrativo: " +
-      error.message,
-      "danger"
-    );
-
-    elementos.estadoCarga.textContent = "Error de inicio.";
-  }
-}
-
-iniciarModulo();
-
+    document.addEventListener("DOMContentLoaded", iniciarModulo);
+})();
