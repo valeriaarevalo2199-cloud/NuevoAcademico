@@ -238,11 +238,8 @@ document.addEventListener("DOMContentLoaded", () => {
             break;
 
           case "funcionario":
-            mostrarMensaje(
-              "Tu cuenta es de funcionario. El módulo correspondiente aún está en construcción.",
-              "info"
-            );
-            break;
+          window.location.href = "funcionario.html";
+          break;
 
           default:
             mostrarMensaje(
