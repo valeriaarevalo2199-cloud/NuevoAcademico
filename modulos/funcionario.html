@@ -1,1 +1,555 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Bandeja de funcionarios | Académico Fácil</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="../index.html">
+      Académico Fácil
+    </a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#menuFuncionario"
+      aria-controls="menuFuncionario"
+      aria-expanded="false"
+      aria-label="Abrir menú"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="menuFuncionario">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item">
+          <a class="nav-link active" href="funcionario.html">
+            Mis solicitudes asignadas
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="../index.html">Inicio</a>
+        </li>
+
+        <li class="nav-item">
+          <button
+            class="btn btn-outline-light btn-sm"
+            id="btnActualizarFuncionario"
+            type="button"
+          >
+            Actualizar
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button
+            class="btn btn-light text-dark btn-sm"
+            id="btnCerrarSesion"
+            type="button"
+          >
+            Cerrar sesión
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4 py-md-5">
+
+  <!-- Encabezado -->
+  <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <p class="text-primary fw-semibold mb-1">
+        ESPACIO DE TRABAJO
+      </p>
+
+      <h1 class="h2 fw-bold mb-1">
+        Bandeja del funcionario
+      </h1>
+
+      <p class="text-secondary mb-0">
+        Bienvenido, <span id="nombreFuncionario">funcionario</span>.
+        Aquí encontrarás las solicitudes asignadas a tu usuario.
+      </p>
+    </div>
+  </header>
+
+  <!-- Mensajes de operación -->
+  <div
+    id="mensajeFuncionario"
+    class="alert alert-info d-none"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+  <div
+    id="cargandoFuncionario"
+    class="text-secondary small mb-3 d-none"
+    role="status"
+  >
+    Cargando tus solicitudes...
+  </div>
+
+  <!-- Indicadores -->
+  <section
+    class="row g-3 mb-4"
+    aria-label="Indicadores de solicitudes asignadas"
+  >
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">
+            Total asignadas
+          </p>
+
+          <p
+            id="totalFuncionario"
+            class="display-6 fw-bold mb-0"
+          >0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">Recibidas</p>
+
+          <p
+            id="recibidasFuncionario"
+            class="display-6 fw-bold text-info mb-0"
+          >0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">En revisión</p>
+
+          <p
+            id="revisionFuncionario"
+            class="display-6 fw-bold text-primary mb-0"
+          >0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-secondary small mb-1">
+            Resueltas o cerradas
+          </p>
+
+          <p
+            id="resueltasFuncionario"
+            class="display-6 fw-bold text-success mb-0"
+          >0</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Bandeja de solicitudes -->
+  <section class="card border-0 shadow-sm">
+    <div class="card-body p-3 p-md-4">
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+          <h2 class="h5 fw-bold mb-1">
+            Mis solicitudes asignadas
+          </h2>
+
+          <p class="text-secondary small mb-0">
+            Consulta los detalles y gestiona el estado de cada solicitud.
+          </p>
+        </div>
+
+        <span
+          id="contadorFuncionario"
+          class="badge text-bg-light border text-dark"
+        >
+          Registros encontrados: 0
+        </span>
+      </div>
+
+      <!-- Búsqueda y filtros -->
+      <div class="row g-2 mb-3">
+
+        <div class="col-12 col-lg-6">
+          <label
+            for="buscarFuncionario"
+            class="form-label small fw-semibold"
+          >
+            Buscar solicitud
+          </label>
+
+          <input
+            type="search"
+            id="buscarFuncionario"
+            class="form-control"
+            placeholder="Radicado, asunto o categoría"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="col-8 col-lg-4">
+          <label
+            for="estadoFuncionario"
+            class="form-label small fw-semibold"
+          >
+            Estado
+          </label>
+
+          <select id="estadoFuncionario" class="form-select">
+            <option value="">Todos los estados</option>
+            <option value="recibida">Recibida</option>
+            <option value="en_revision">En revisión</option>
+            <option value="pendiente_informacion">
+              Pendiente de información
+            </option>
+            <option value="resuelta">Resuelta</option>
+            <option value="cerrada">Cerrada</option>
+          </select>
+        </div>
+
+        <div class="col-4 col-lg-2 d-flex align-items-end">
+          <button
+            id="limpiarFuncionario"
+            class="btn btn-outline-secondary w-100"
+            type="button"
+          >
+            Limpiar
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Radicado</th>
+              <th scope="col">Asunto y categoría</th>
+              <th scope="col">Fecha de recepción</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Última actualización</th>
+              <th scope="col">Acción</th>
+            </tr>
+          </thead>
+
+          <tbody id="tablaFuncionario">
+            <tr>
+              <td
+                colspan="6"
+                class="text-center text-secondary py-4"
+              >
+                Cargando solicitudes...
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+
+      <p
+        id="sinResultadosFuncionario"
+        class="alert alert-secondary d-none mt-3 mb-0"
+        role="status"
+      >
+        No se encontraron solicitudes con los filtros seleccionados.
+      </p>
+
+    </div>
+  </section>
+
+  <!-- Información complementaria -->
+  <section class="card border-0 shadow-sm mt-4">
+    <div class="card-body p-3 p-md-4">
+      <h2 class="h6 fw-bold">Gestión de solicitudes</h2>
+
+      <p class="small text-secondary mb-0">
+        Selecciona «Ver solicitud» para consultar su descripción,
+        revisar el historial, enviar mensajes y actualizar el estado.
+        Solo podrás gestionar las solicitudes asignadas a tu usuario.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal de detalle -->
+<div
+  class="modal fade"
+  id="modalDetalleFuncionario"
+  tabindex="-1"
+  aria-labelledby="tituloDetalleFuncionario"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+
+      <div class="modal-header">
+        <div>
+          <h2
+            class="modal-title fs-5 fw-bold"
+            id="tituloDetalleFuncionario"
+          >
+            Detalle de solicitud
+          </h2>
+
+          <p
+            id="radicadoDetalleFuncionario"
+            class="text-secondary small mb-0"
+          ></p>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Datos de la solicitud -->
+        <section class="mb-4">
+          <h3 class="h6 fw-bold mb-3">Información de la solicitud</h3>
+
+          <div class="row g-3">
+
+            <div class="col-12 col-md-6">
+              <p class="small text-secondary mb-1">
+                Categoría
+              </p>
+
+              <p
+                id="categoriaDetalleFuncionario"
+                class="fw-semibold mb-0"
+              >No disponible</p>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <p class="small text-secondary mb-1">
+                Fecha de recepción
+              </p>
+
+              <p
+                id="fechaDetalleFuncionario"
+                class="mb-0"
+              >No disponible</p>
+            </div>
+
+            <div class="col-12">
+              <p class="small text-secondary mb-1">
+                Estado actual
+              </p>
+
+              <div id="estadoDetalleFuncionario"></div>
+            </div>
+
+            <div class="col-12">
+              <p class="small text-secondary mb-1">
+                Asunto
+              </p>
+
+              <p
+                id="asuntoDetalleFuncionario"
+                class="fw-semibold mb-0"
+              ></p>
+            </div>
+
+            <div class="col-12">
+              <p class="small text-secondary mb-1">
+                Descripción
+              </p>
+
+              <div
+                id="descripcionDetalleFuncionario"
+                class="border rounded bg-light p-3"
+                style="white-space: pre-wrap; overflow-wrap: anywhere;"
+              ></div>
+            </div>
+
+            <div class="col-12">
+              <p class="small text-secondary mb-1">
+                Información del solicitante
+              </p>
+
+              <p
+                id="estudianteDetalleFuncionario"
+                class="small mb-0"
+              ></p>
+            </div>
+
+          </div>
+        </section>
+
+        <hr>
+
+        <!-- Actualización de estado -->
+        <section class="mb-4">
+          <h3 class="h6 fw-bold mb-3">Actualizar estado</h3>
+
+          <div class="row g-2 align-items-end">
+
+            <div class="col-12 col-md-8">
+              <label
+                for="nuevoEstadoFuncionario"
+                class="form-label small fw-semibold"
+              >
+                Nuevo estado
+              </label>
+
+              <select
+                id="nuevoEstadoFuncionario"
+                class="form-select"
+              >
+                <option value="recibida">Recibida</option>
+                <option value="en_revision">En revisión</option>
+                <option value="pendiente_informacion">
+                  Pendiente de información
+                </option>
+                <option value="resuelta">Resuelta</option>
+                <option value="cerrada">Cerrada</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <button
+                id="guardarEstadoFuncionario"
+                class="btn btn-primary w-100"
+                type="button"
+              >
+                Guardar estado
+              </button>
+            </div>
+
+          </div>
+
+          <p class="form-text mb-0">
+            Los cambios de estado quedan registrados en el historial
+            automáticamente cuando el disparador de la base de datos funciona.
+          </p>
+        </section>
+
+        <hr>
+
+        <!-- Mensajes -->
+        <section class="mb-4">
+          <h3 class="h6 fw-bold mb-3">Mensajes de la solicitud</h3>
+
+          <div
+            id="listaMensajesFuncionario"
+            class="mb-3"
+            aria-live="polite"
+          >
+            <p class="text-secondary small">
+              Los mensajes aparecerán aquí.
+            </p>
+          </div>
+
+          <form id="formMensajeFuncionario">
+
+            <label
+              for="contenidoMensajeFuncionario"
+              class="form-label small fw-semibold"
+            >
+              Escribir respuesta
+            </label>
+
+            <textarea
+              id="contenidoMensajeFuncionario"
+              class="form-control"
+              rows="3"
+              maxlength="5000"
+              placeholder="Escribe una respuesta o solicita información adicional..."
+              required
+            ></textarea>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+              <small class="text-secondary">
+                Máximo 5000 caracteres.
+              </small>
+
+              <button
+                type="submit"
+                class="btn btn-success"
+              >
+                Enviar mensaje
+              </button>
+            </div>
+
+          </form>
+        </section>
+
+        <hr>
+
+        <!-- Historial -->
+        <section>
+          <h3 class="h6 fw-bold mb-3">Historial de actividad</h3>
+
+          <div
+            id="listaHistorialFuncionario"
+            aria-live="polite"
+          >
+            <p class="text-secondary small">
+              El historial aparecerá aquí.
+            </p>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="bg-white border-top py-3 mt-5">
+  <div class="container text-center text-secondary small">
+    Académico Fácil · Módulo de funcionarios
+  </div>
+</footer>
+
+<!-- Primero Bootstrap, luego Supabase y finalmente los scripts del proyecto -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/supabase.js"></script>
+<script src="../assets/js/funcionario.js"></script>
+
+</body>
+</html>
