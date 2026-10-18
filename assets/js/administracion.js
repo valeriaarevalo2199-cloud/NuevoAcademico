@@ -1,4 +1,4 @@
-```javascript
+
 "use strict";
 
 const cliente = window.supabaseClient;
@@ -568,4 +568,4 @@ async function iniciarModulo() {
 }
 
 iniciarModulo();
-```
+
