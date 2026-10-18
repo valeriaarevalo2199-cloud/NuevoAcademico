@@ -6,6 +6,7 @@ let perfilesAdmin = [];
 let categoriasAdmin = [];
 let asignacionesAdmin = [];
 let usuarioAdministrador = null;
+let guardandoAsignacionAdmin = false;
 
 const ESTADOS_ADMIN = {
   recibida: "Recibida",
@@ -23,6 +24,8 @@ async function iniciarAdministracion() {
     return;
   }
 
+  conectarEventosAdmin();
+
   const { data: sesionData, error: sesionError } =
     await cliente.auth.getSession();
 
@@ -37,9 +40,18 @@ async function iniciarAdministracion() {
     .from("perfiles")
     .select("id, nombres, apellidos, correo, rol")
     .eq("id", usuarioAdministrador.id)
-    .single();
+    .maybeSingle();
 
-  if (errorPerfil || perfil?.rol !== "administrador") {
+  if (errorPerfil) {
+    console.error("Error consultando perfil:", errorPerfil);
+    mostrarMensaje(
+      "No se pudo verificar tu perfil. Revisa los permisos de lectura de perfiles.",
+      "danger"
+    );
+    return;
+  }
+
+  if (!perfil || perfil.rol !== "administrador") {
     mostrarMensaje(
       "No tienes permisos para acceder al módulo administrativo.",
       "danger"
@@ -47,21 +59,10 @@ async function iniciarAdministracion() {
     return;
   }
 
-  const botonCerrar = document.getElementById("btnCerrarSesion");
+  await cargarDatosAdmin();
+}
 
-  if (botonCerrar) {
-    botonCerrar.addEventListener("click", async () => {
-      const { error } = await cliente.auth.signOut();
-
-      if (error) {
-        mostrarMensaje("No fue posible cerrar la sesión.", "danger");
-        return;
-      }
-
-      window.location.href = "login.html";
-    });
-  }
-
+function conectarEventosAdmin() {
   document.getElementById("buscarAdmin")
     ?.addEventListener("input", mostrarSolicitudesAdmin);
 
@@ -75,162 +76,176 @@ async function iniciarAdministracion() {
       mostrarSolicitudesAdmin();
     });
 
-  // Botón opcional para actualizar la información.
   document.getElementById("btnActualizarAdmin")
     ?.addEventListener("click", cargarDatosAdmin);
 
-  await cargarDatosAdmin();
+  document.getElementById("btnActualizarPrincipalAdmin")
+    ?.addEventListener("click", cargarDatosAdmin);
+
+  document.getElementById("btnCerrarSesion")
+    ?.addEventListener("click", async () => {
+      const cliente = window.supabaseClient;
+      const { error } = await cliente.auth.signOut();
+
+      if (error) {
+        mostrarMensaje("No fue posible cerrar la sesión.", "danger");
+        return;
+      }
+
+      window.location.href = "login.html";
+    });
+
+  document.getElementById("confirmarAsignacionAdmin")
+    ?.addEventListener("click", confirmarAsignacionAdmin);
 }
 
 async function cargarDatosAdmin() {
   const cliente = window.supabaseClient;
+  if (!cliente) return;
 
-  mostrarMensaje("Cargando solicitudes...", "info");
+  mostrarCargaAdmin(true);
+  mostrarMensaje("", "info", true);
 
-  const [
-    resultadoSolicitudes,
-    resultadoPerfiles,
-    resultadoCategorias,
-    resultadoAsignaciones
-  ] = await Promise.all([
-    cliente
-      .from("solicitudes")
-      .select(`
-        id,
-        radicado,
-        estudiante_id,
-        categoria_id,
-        asunto,
-        descripcion,
-        estado,
-        created_at,
-        updated_at
-      `)
-      .order("created_at", { ascending: false }),
+  try {
+    const [
+      resultadoSolicitudes,
+      resultadoPerfiles,
+      resultadoCategorias,
+      resultadoAsignaciones
+    ] = await Promise.all([
+      cliente
+        .from("solicitudes")
+        .select(`
+          id,
+          radicado,
+          estudiante_id,
+          categoria_id,
+          asunto,
+          descripcion,
+          estado,
+          created_at,
+          updated_at
+        `)
+        .order("created_at", { ascending: false }),
 
-    cliente
-      .from("perfiles")
-      .select("id, nombres, apellidos, correo, rol"),
+      cliente
+        .from("perfiles")
+        .select("id, nombres, apellidos, correo, rol"),
 
-    cliente
-      .from("categorias")
-      .select("id, nombre"),
+      cliente
+        .from("categorias")
+        .select("id, nombre"),
 
-    cliente
-      .from("asignaciones")
-      .select("id, solicitud_id, funcionario_id, asignado_por, created_at")
-  ]);
+      cliente
+        .from("asignaciones")
+        .select("id, solicitud_id, funcionario_id, asignado_por, created_at")
+    ]);
 
-  if (resultadoSolicitudes.error) {
-    console.error(resultadoSolicitudes.error);
-    mostrarMensaje(
-      "No fue posible cargar las solicitudes: " +
-      resultadoSolicitudes.error.message,
-      "danger"
-    );
-    return;
+    if (resultadoSolicitudes.error) {
+      throw new Error(
+        "No se pudieron cargar las solicitudes: " +
+        resultadoSolicitudes.error.message
+      );
+    }
+
+    solicitudesAdmin = resultadoSolicitudes.data || [];
+
+    const advertencias = [];
+
+    if (resultadoPerfiles.error) {
+      console.error(resultadoPerfiles.error);
+      perfilesAdmin = [];
+      advertencias.push("No se pudieron consultar los perfiles.");
+    } else {
+      perfilesAdmin = resultadoPerfiles.data || [];
+    }
+
+    if (resultadoCategorias.error) {
+      console.error(resultadoCategorias.error);
+      categoriasAdmin = [];
+      advertencias.push("No se pudieron consultar las categorías.");
+    } else {
+      categoriasAdmin = resultadoCategorias.data || [];
+    }
+
+    if (resultadoAsignaciones.error) {
+      console.error(resultadoAsignaciones.error);
+      asignacionesAdmin = [];
+      advertencias.push("No se pudieron consultar las asignaciones.");
+    } else {
+      asignacionesAdmin = resultadoAsignaciones.data || [];
+    }
+
+    actualizarMetricasAdmin();
+    mostrarSolicitudesAdmin();
+
+    if (advertencias.length) {
+      mostrarMensaje(
+        advertencias.join(" ") +
+        " Revisa las políticas RLS de las tablas correspondientes.",
+        "warning"
+      );
+    } else {
+      mostrarMensaje(
+        `Se cargaron ${solicitudesAdmin.length} solicitudes.`,
+        "success"
+      );
+    }
+
+  } catch (error) {
+    console.error("Error en administración:", error);
+    mostrarMensaje(error.message || "Error al cargar información.", "danger");
+
+    const tabla = document.getElementById("tablaAdmin");
+
+    if (tabla) {
+      tabla.replaceChildren();
+
+      const fila = document.createElement("tr");
+      const celda = document.createElement("td");
+
+      celda.colSpan = 7;
+      celda.className = "text-center text-danger py-4";
+      celda.textContent = "No fue posible cargar las solicitudes.";
+
+      fila.appendChild(celda);
+      tabla.appendChild(fila);
+    }
+  } finally {
+    mostrarCargaAdmin(false);
   }
+}
 
-  solicitudesAdmin = resultadoSolicitudes.data || [];
+function mostrarCargaAdmin(mostrar) {
+  document.getElementById("cargandoAdmin")
+    ?.classList.toggle("d-none", !mostrar);
 
-  // Los perfiles y las asignaciones se necesitan para mostrar
-  // los nombres y permitir la asignación de funcionarios.
-  if (resultadoPerfiles.error) {
-    console.error(resultadoPerfiles.error);
-    mostrarMensaje(
-      "Las solicitudes cargaron, pero no se pudieron consultar los perfiles. Revisa las políticas RLS de perfiles.",
-      "warning"
-    );
-    perfilesAdmin = [];
-  } else {
-    perfilesAdmin = resultadoPerfiles.data || [];
-  }
+  const boton = document.getElementById("btnActualizarAdmin");
+  const botonPrincipal = document.getElementById("btnActualizarPrincipalAdmin");
 
-  if (resultadoCategorias.error) {
-    console.error(resultadoCategorias.error);
-    categoriasAdmin = [];
-  } else {
-    categoriasAdmin = resultadoCategorias.data || [];
-  }
-
-  if (resultadoAsignaciones.error) {
-    console.error(resultadoAsignaciones.error);
-    asignacionesAdmin = [];
-
-    mostrarMensaje(
-      "No se pudieron consultar las asignaciones. Revisa los permisos RLS de asignaciones.",
-      "warning"
-    );
-  } else {
-    asignacionesAdmin = resultadoAsignaciones.data || [];
-  }
-
-  actualizarMetricasAdmin();
-  llenarFiltroEstados();
-  mostrarSolicitudesAdmin();
-
-  if (
-    !resultadoPerfiles.error &&
-    !resultadoCategorias.error &&
-    !resultadoAsignaciones.error
-  ) {
-    mostrarMensaje(
-      `Se cargaron ${solicitudesAdmin.length} solicitudes.`,
-      "success"
-    );
-  }
+  if (boton) boton.disabled = mostrar;
+  if (botonPrincipal) botonPrincipal.disabled = mostrar;
 }
 
 function actualizarMetricasAdmin() {
-  const total = solicitudesAdmin.length;
+  asignarTexto("totalSolicitudesAdmin", solicitudesAdmin.length);
 
-  const recibidas = solicitudesAdmin.filter(
-    s => s.estado === "recibida"
-  ).length;
+  asignarTexto(
+    "recibidasAdmin",
+    solicitudesAdmin.filter(s => s.estado === "recibida").length
+  );
 
-  const enRevision = solicitudesAdmin.filter(
-    s => s.estado === "en_revision"
-  ).length;
+  asignarTexto(
+    "revisionAdmin",
+    solicitudesAdmin.filter(s => s.estado === "en_revision").length
+  );
 
-  const pendientes = solicitudesAdmin.filter(
-    s => s.estado === "pendiente_informacion"
-  ).length;
-
-  const resueltas = solicitudesAdmin.filter(
-    s => ["resuelta", "cerrada"].includes(s.estado)
-  ).length;
-
-  asignarTexto("totalSolicitudesAdmin", total);
-  asignarTexto("recibidasAdmin", recibidas);
-  asignarTexto("revisionAdmin", enRevision);
-  asignarTexto("resueltasAdmin", resueltas);
-  asignarTexto("pendientesAdmin", pendientes);
-}
-
-function llenarFiltroEstados() {
-  const filtro = document.getElementById("estadoAdmin");
-  if (!filtro) return;
-
-  const valorActual = filtro.value;
-  const estados = [...new Set(
-    solicitudesAdmin.map(s => s.estado).filter(Boolean)
-  )];
-
-  filtro.replaceChildren();
-
-  const opcionTodos = document.createElement("option");
-  opcionTodos.value = "";
-  opcionTodos.textContent = "Todos los estados";
-  filtro.appendChild(opcionTodos);
-
-  estados.forEach(estado => {
-    const opcion = document.createElement("option");
-    opcion.value = estado;
-    opcion.textContent = formatearEstado(estado);
-    filtro.appendChild(opcion);
-  });
-
-  filtro.value = estados.includes(valorActual) ? valorActual : "";
+  asignarTexto(
+    "resueltasAdmin",
+    solicitudesAdmin.filter(s =>
+      ["resuelta", "cerrada"].includes(s.estado)
+    ).length
+  );
 }
 
 function mostrarSolicitudesAdmin() {
@@ -245,113 +260,114 @@ function mostrarSolicitudesAdmin() {
     document.getElementById("estadoAdmin")?.value || "";
 
   const filtradas = solicitudesAdmin.filter(solicitud => {
-    const perfil = perfilesAdmin.find(
-      p => p.id === solicitud.estudiante_id
-    );
-
+    const estudiante = buscarPerfilAdmin(solicitud.estudiante_id);
     const categoria = categoriasAdmin.find(
       c => c.id === solicitud.categoria_id
     );
-
     const asignacion = obtenerAsignacionAdmin(solicitud.id);
-
     const funcionario = asignacion
-      ? perfilesAdmin.find(p => p.id === asignacion.funcionario_id)
+      ? buscarPerfilAdmin(asignacion.funcionario_id)
       : null;
 
-    const nombre = perfil
-      ? `${perfil.nombres || ""} ${perfil.apellidos || ""}`.trim()
-      : "Estudiante no disponible";
-
-    const nombreFuncionario = funcionario
-      ? `${funcionario.nombres || ""} ${funcionario.apellidos || ""}`.trim()
-      : "";
+    const nombreEstudiante = nombrePerfilAdmin(estudiante);
+    const nombreFuncionario = nombrePerfilAdmin(funcionario);
 
     const texto = [
       solicitud.radicado,
       solicitud.asunto,
       solicitud.descripcion,
-      nombre,
-      perfil?.correo,
+      nombreEstudiante,
+      estudiante?.correo,
       categoria?.nombre,
       nombreFuncionario
     ].filter(Boolean).join(" ").toLowerCase();
 
-    return (
-      texto.includes(busqueda) &&
-      (!estadoSeleccionado || solicitud.estado === estadoSeleccionado)
-    );
+    return texto.includes(busqueda) &&
+      (!estadoSeleccionado || solicitud.estado === estadoSeleccionado);
   });
 
   tabla.replaceChildren();
 
-  if (filtradas.length === 0) {
+  if (!filtradas.length) {
     const fila = document.createElement("tr");
     const celda = document.createElement("td");
 
     celda.colSpan = 7;
-    celda.className = "text-center text-muted py-4";
+    celda.className = "text-center text-secondary py-4";
     celda.textContent = "No se encontraron solicitudes.";
 
     fila.appendChild(celda);
     tabla.appendChild(fila);
   } else {
     filtradas.forEach(solicitud => {
-      const perfil = perfilesAdmin.find(
-        p => p.id === solicitud.estudiante_id
+      const fila = document.createElement("tr");
+      const estudiante = buscarPerfilAdmin(solicitud.estudiante_id);
+
+      agregarCelda(
+        fila,
+        solicitud.radicado || "Sin radicado"
       );
 
-      const nombre = perfil
-        ? `${perfil.nombres || ""} ${perfil.apellidos || ""}`.trim()
-        : "Estudiante no disponible";
+      agregarCelda(
+        fila,
+        nombrePerfilAdmin(estudiante) || "Estudiante no disponible"
+      );
 
-      const fila = document.createElement("tr");
+      agregarCelda(
+        fila,
+        solicitud.asunto || "Sin asunto"
+      );
 
-      agregarCelda(fila, solicitud.radicado || "Sin radicado");
-      agregarCelda(fila, nombre);
-      agregarCelda(fila, solicitud.asunto || "Sin asunto");
-      agregarCelda(fila, formatearFecha(solicitud.created_at));
-      agregarCeldaEstado(fila, solicitud.estado);
-      agregarCeldaAsignacion(fila, solicitud);
+      agregarCelda(
+        fila,
+        formatearFechaAdmin(solicitud.created_at)
+      );
 
-      const celdaDetalle = document.createElement("td");
-      const botonDetalle = document.createElement("button");
+      agregarCeldaEstadoAdmin(fila, solicitud.estado);
+      agregarCeldaAsignacionAdmin(fila, solicitud);
 
-      botonDetalle.type = "button";
-      botonDetalle.className = "btn btn-sm btn-outline-primary";
-      botonDetalle.textContent = "Ver detalle";
+      const celdaAccion = document.createElement("td");
+      const boton = document.createElement("button");
 
-      botonDetalle.addEventListener("click", () => {
+      boton.type = "button";
+      boton.className = "btn btn-sm btn-outline-primary";
+      boton.textContent = "Ver detalle";
+
+      boton.addEventListener("click", () => {
         verDetalleAdmin(solicitud.id);
       });
 
-      celdaDetalle.appendChild(botonDetalle);
-      fila.appendChild(celdaDetalle);
+      celdaAccion.appendChild(boton);
+      fila.appendChild(celdaAccion);
+
       tabla.appendChild(fila);
     });
   }
 
-  asignarTexto(
-    "contadorAdmin",
-    `Registros encontrados: ${filtradas.length}`
-  );
+  asignarTexto("contadorAdmin", `Registros encontrados: ${filtradas.length}`);
 
   document.getElementById("sinResultadosAdmin")
     ?.classList.toggle("d-none", filtradas.length > 0);
 }
 
-function agregarCeldaEstado(fila, estado) {
+function agregarCelda(fila, contenido) {
   const celda = document.createElement("td");
-  const etiqueta = document.createElement("span");
-
-  etiqueta.className = "badge " + claseEstado(estado);
-  etiqueta.textContent = formatearEstado(estado);
-
-  celda.appendChild(etiqueta);
+  celda.textContent = contenido;
   fila.appendChild(celda);
 }
 
-function claseEstado(estado) {
+function agregarCeldaEstadoAdmin(fila, estado) {
+  const celda = document.createElement("td");
+  const badge = document.createElement("span");
+
+  badge.className = "badge " + claseEstadoAdmin(estado);
+  badge.textContent = formatearEstadoAdmin(estado);
+
+  celda.appendChild(badge);
+  fila.appendChild(celda);
+}
+
+function claseEstadoAdmin(estado) {
   const clases = {
     recibida: "text-bg-info",
     en_revision: "text-bg-primary",
@@ -363,114 +379,151 @@ function claseEstado(estado) {
   return clases[estado] || "text-bg-secondary";
 }
 
-function agregarCeldaAsignacion(fila, solicitud) {
+function agregarCeldaAsignacionAdmin(fila, solicitud) {
   const celda = document.createElement("td");
   const asignacion = obtenerAsignacionAdmin(solicitud.id);
 
   if (asignacion) {
-    const funcionario = perfilesAdmin.find(
-      p => p.id === asignacion.funcionario_id
-    );
+    const funcionario = buscarPerfilAdmin(asignacion.funcionario_id);
+    const badge = document.createElement("span");
 
-    const nombre = funcionario
-      ? `${funcionario.nombres || ""} ${funcionario.apellidos || ""}`.trim()
-      : "Funcionario asignado";
+    badge.className = "badge text-bg-success";
+    badge.textContent = nombrePerfilAdmin(funcionario) ||
+      "Funcionario asignado";
 
-    const texto = document.createElement("span");
-    texto.textContent = nombre;
-    celda.appendChild(texto);
+    celda.appendChild(badge);
   } else {
-    const funcionarios = perfilesAdmin.filter(
-      p => p.rol === "funcionario"
-    );
+    const badge = document.createElement("span");
 
-    if (funcionarios.length === 0) {
-      celda.textContent = "No hay funcionarios disponibles";
-    } else {
-      const selector = document.createElement("select");
-      selector.className = "form-select form-select-sm mb-2";
-      selector.setAttribute("aria-label", "Seleccionar funcionario");
+    badge.className = "badge text-bg-warning";
+    badge.textContent = "Sin asignar";
 
-      const inicial = document.createElement("option");
-      inicial.value = "";
-      inicial.textContent = "Seleccionar funcionario";
-      selector.appendChild(inicial);
-
-      funcionarios.forEach(funcionario => {
-        const opcion = document.createElement("option");
-        opcion.value = funcionario.id;
-        opcion.textContent =
-          `${funcionario.nombres || ""} ${funcionario.apellidos || ""}`.trim() ||
-          funcionario.correo ||
-          "Funcionario";
-
-        selector.appendChild(opcion);
-      });
-
-      const boton = document.createElement("button");
-      boton.type = "button";
-      boton.className = "btn btn-sm btn-primary";
-      boton.textContent = "Asignar";
-
-      boton.addEventListener("click", async () => {
-        if (!selector.value) {
-          mostrarMensaje(
-            "Selecciona un funcionario antes de asignar.",
-            "warning"
-          );
-          return;
-        }
-
-        await asignarFuncionarioAdmin(
-          solicitud.id,
-          selector.value,
-          boton
-        );
-      });
-
-      celda.append(selector, boton);
-    }
+    celda.appendChild(badge);
   }
 
   fila.appendChild(celda);
+
+  const celdaAccion = document.createElement("td");
+  const boton = document.createElement("button");
+
+  boton.type = "button";
+  boton.className = "btn btn-sm btn-primary";
+  boton.textContent = asignacion ? "Asignada" : "Asignar";
+  boton.disabled = Boolean(asignacion);
+
+  if (asignacion) {
+    boton.title = "Esta solicitud ya tiene un funcionario asignado";
+  } else {
+    boton.addEventListener("click", () => abrirModalAsignacionAdmin(solicitud));
+  }
+
+  celdaAccion.appendChild(boton);
+  fila.appendChild(celdaAccion);
 }
 
-function obtenerAsignacionAdmin(solicitudId) {
-  return asignacionesAdmin.find(
-    a => a.solicitud_id === solicitudId
-  );
-}
+function abrirModalAsignacionAdmin(solicitud) {
+  const modalElemento = document.getElementById("modalAsignacionAdmin");
+  const selector = document.getElementById("funcionarioAsignacionAdmin");
 
-async function asignarFuncionarioAdmin(
-  solicitudId,
-  funcionarioId,
-  boton
-) {
-  const cliente = window.supabaseClient;
-
-  if (!usuarioAdministrador) {
-    mostrarMensaje("La sesión administrativa no está disponible.", "danger");
+  if (!modalElemento || !selector || !window.bootstrap?.Modal) {
+    mostrarMensaje("No se pudo abrir la ventana de asignación.", "danger");
     return;
   }
 
-  if (obtenerAsignacionAdmin(solicitudId)) {
-    mostrarMensaje("Esta solicitud ya tiene un funcionario asignado.", "warning");
+  document.getElementById("solicitudSeleccionadaAdmin").value = solicitud.id;
+
+  asignarTexto(
+    "radicadoModalAdmin",
+    `Radicado: ${solicitud.radicado || "Sin radicado"}`
+  );
+
+  selector.replaceChildren();
+
+  const inicial = document.createElement("option");
+  inicial.value = "";
+  inicial.textContent = "Selecciona un funcionario";
+  selector.appendChild(inicial);
+
+  const funcionarios = perfilesAdmin.filter(
+    p => p.rol === "funcionario"
+  );
+
+  funcionarios.forEach(funcionario => {
+    const opcion = document.createElement("option");
+
+    opcion.value = funcionario.id;
+    opcion.textContent = nombrePerfilAdmin(funcionario) ||
+      funcionario.correo ||
+      "Funcionario";
+
+    selector.appendChild(opcion);
+  });
+
+  if (!funcionarios.length) {
+    mostrarMensaje(
+      "No se encontraron funcionarios. Verifica los perfiles y sus permisos de lectura.",
+      "warning"
+    );
+    return;
+  }
+
+  const botonConfirmar = document.getElementById("confirmarAsignacionAdmin");
+  if (botonConfirmar) botonConfirmar.disabled = false;
+
+  window.bootstrap.Modal
+    .getOrCreateInstance(modalElemento)
+    .show();
+}
+
+async function confirmarAsignacionAdmin() {
+  if (guardandoAsignacionAdmin) return;
+
+  const solicitudId =
+    document.getElementById("solicitudSeleccionadaAdmin")?.value;
+
+  const funcionarioId =
+    document.getElementById("funcionarioAsignacionAdmin")?.value;
+
+  if (!solicitudId || !funcionarioId) {
+    mostrarMensaje("Selecciona un funcionario antes de confirmar.", "warning");
+    return;
+  }
+
+  const asignacionActual = obtenerAsignacionAdmin(solicitudId);
+
+  if (asignacionActual) {
+    mostrarMensaje("Esta solicitud ya tiene una asignación.", "warning");
     await cargarDatosAdmin();
     return;
   }
 
-  const confirmar = window.confirm(
-    "¿Confirmas la asignación de esta solicitud al funcionario seleccionado?"
-  );
+  const funcionario = buscarPerfilAdmin(funcionarioId);
 
-  if (!confirmar) return;
+  if (!funcionario || funcionario.rol !== "funcionario") {
+    mostrarMensaje("El funcionario seleccionado no es válido.", "danger");
+    return;
+  }
 
-  const textoOriginal = boton.textContent;
-  boton.disabled = true;
-  boton.textContent = "Asignando...";
+  if (!window.confirm(
+    `¿Asignar la solicitud a ${nombrePerfilAdmin(funcionario)}?`
+  )) {
+    return;
+  }
+
+  const boton = document.getElementById("confirmarAsignacionAdmin");
+  const textoOriginal = boton?.textContent;
+
+  guardandoAsignacionAdmin = true;
+
+  if (boton) {
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
+  }
 
   try {
-    // Verificar de nuevo para reducir el riesgo de duplicados.
+    const cliente = window.supabaseClient;
+
+    // Comprobar otra vez que no se haya asignado entretanto.
     const { data: existente, error: errorConsulta } = await cliente
       .from("asignaciones")
       .select("id")
@@ -481,9 +534,10 @@ async function asignarFuncionarioAdmin(
 
     if (existente) {
       mostrarMensaje(
-        "La solicitud ya fue asignada. Actualizando la información.",
+        "La solicitud ya fue asignada. Actualizando la bandeja.",
         "warning"
       );
+
       await cargarDatosAdmin();
       return;
     }
@@ -498,20 +552,34 @@ async function asignarFuncionarioAdmin(
 
     if (error) throw error;
 
-    mostrarMensaje("Funcionario asignado correctamente.", "success");
+    mostrarMensaje("Asignación guardada correctamente.", "success");
+
+    // Recargar desde la base de datos para confirmar el resultado.
     await cargarDatosAdmin();
+
+    if (obtenerAsignacionAdmin(solicitudId)) {
+      window.bootstrap.Modal
+        .getOrCreateInstance(
+          document.getElementById("modalAsignacionAdmin")
+        )
+        .hide();
+    }
 
   } catch (error) {
     console.error("Error al asignar funcionario:", error);
 
     mostrarMensaje(
-      "No fue posible asignar la solicitud: " +
-      (error.message || "error desconocido"),
+      "No fue posible guardar la asignación: " +
+      (error.message || "Error desconocido"),
       "danger"
     );
   } finally {
-    boton.disabled = false;
-    boton.textContent = textoOriginal;
+    guardandoAsignacionAdmin = false;
+
+    if (boton) {
+      boton.disabled = false;
+      boton.textContent = textoOriginal || "Confirmar asignación";
+    }
   }
 }
 
@@ -519,77 +587,78 @@ function verDetalleAdmin(solicitudId) {
   const solicitud = solicitudesAdmin.find(s => s.id === solicitudId);
   if (!solicitud) return;
 
-  const perfil = perfilesAdmin.find(
-    p => p.id === solicitud.estudiante_id
-  );
-
+  const estudiante = buscarPerfilAdmin(solicitud.estudiante_id);
   const categoria = categoriasAdmin.find(
     c => c.id === solicitud.categoria_id
   );
 
   const asignacion = obtenerAsignacionAdmin(solicitud.id);
-
   const funcionario = asignacion
-    ? perfilesAdmin.find(p => p.id === asignacion.funcionario_id)
+    ? buscarPerfilAdmin(asignacion.funcionario_id)
     : null;
-
-  const nombreEstudiante = perfil
-    ? `${perfil.nombres || ""} ${perfil.apellidos || ""}`.trim()
-    : "No disponible";
-
-  const nombreFuncionario = funcionario
-    ? `${funcionario.nombres || ""} ${funcionario.apellidos || ""}`.trim()
-    : "Sin asignar";
 
   window.alert([
     `Radicado: ${solicitud.radicado || "Sin radicado"}`,
-    `Estudiante: ${nombreEstudiante}`,
+    `Estudiante: ${nombrePerfilAdmin(estudiante) || "No disponible"}`,
     `Categoría: ${categoria?.nombre || "Sin categoría"}`,
     `Asunto: ${solicitud.asunto || "Sin asunto"}`,
-    `Estado: ${formatearEstado(solicitud.estado)}`,
-    `Funcionario: ${nombreFuncionario}`,
-    `Fecha: ${formatearFecha(solicitud.created_at)}`,
+    `Estado: ${formatearEstadoAdmin(solicitud.estado)}`,
+    `Responsable: ${nombrePerfilAdmin(funcionario) || "Sin asignar"}`,
+    `Fecha: ${formatearFechaAdmin(solicitud.created_at)}`,
     "",
     "Descripción:",
     solicitud.descripcion || "Sin descripción"
   ].join("\n"));
 }
 
-function agregarCelda(fila, contenido) {
-  const celda = document.createElement("td");
-  celda.textContent = contenido;
-  fila.appendChild(celda);
+function obtenerAsignacionAdmin(solicitudId) {
+  return asignacionesAdmin.find(
+    a => a.solicitud_id === solicitudId
+  );
 }
 
-function asignarTexto(id, valor) {
-  const elemento = document.getElementById(id);
-
-  if (elemento) {
-    elemento.textContent = valor;
-  }
+function buscarPerfilAdmin(id) {
+  return perfilesAdmin.find(p => p.id === id);
 }
 
-function formatearEstado(estado) {
-  return ESTADOS_ADMIN[estado] ||
-    (estado || "Sin estado")
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, letra => letra.toUpperCase());
+function nombrePerfilAdmin(perfil) {
+  if (!perfil) return "";
+
+  return `${perfil.nombres || ""} ${perfil.apellidos || ""}`.trim() ||
+    perfil.correo ||
+    "";
 }
 
-function formatearFecha(fecha) {
+function formatearEstadoAdmin(estado) {
+  return ESTADOS_ADMIN[estado] || estado || "Sin estado";
+}
+
+function formatearFechaAdmin(fecha) {
   if (!fecha) return "Sin fecha";
 
-  return new Date(fecha).toLocaleString("es-CO", {
+  const valor = new Date(fecha);
+
+  if (Number.isNaN(valor.getTime())) return "Sin fecha";
+
+  return valor.toLocaleString("es-CO", {
     dateStyle: "short",
     timeStyle: "short"
   });
 }
 
-function mostrarMensaje(texto, tipo = "info") {
-  const mensaje = document.getElementById("mensajeAdmin");
+function asignarTexto(id, valor) {
+  const elemento = document.getElementById(id);
 
-  if (!mensaje) {
-    console.log(texto);
+  if (elemento) elemento.textContent = valor;
+}
+
+function mostrarMensaje(texto, tipo = "info", ocultar = false) {
+  const mensaje = document.getElementById("mensajeAdmin");
+  if (!mensaje) return;
+
+  if (ocultar || !texto) {
+    mensaje.classList.add("d-none");
+    mensaje.textContent = "";
     return;
   }
 
@@ -598,5 +667,5 @@ function mostrarMensaje(texto, tipo = "info") {
   mensaje.classList.remove("d-none");
 }
 
-window.mostrarSolicitudesAdmin = mostrarSolicitudesAdmin;
 window.cargarDatosAdmin = cargarDatosAdmin;
+window.mostrarSolicitudesAdmin = mostrarSolicitudesAdmin;
