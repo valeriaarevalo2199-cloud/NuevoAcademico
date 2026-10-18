@@ -1,733 +1,571 @@
-/* ==========================================
-   ACADÉMICO FÁCIL
-   MÓDULO DE ADMINISTRACIÓN
-   ========================================== */
+```javascript
+"use strict";
 
-document.addEventListener("DOMContentLoaded", iniciarAdministracion);
+const cliente = window.supabaseClient;
 
-let solicitudesAdmin = [];
-let perfilesAdmin = [];
-let categoriasAdmin = [];
-let asignacionesAdmin = [];
-let usuarioAdmin = null;
-let clienteAdmin = null;
+const elementos = {
+  mensaje: document.getElementById("mensajeSistema"),
+  estadoCarga: document.getElementById("estadoCarga"),
+  nombreAdmin: document.getElementById("adminNombre"),
+  btnActualizar: document.getElementById("btnActualizar"),
+  btnCerrarSesion: document.getElementById("btnCerrarSesion"),
+  total: document.getElementById("totalSolicitudes"),
+  recibidas: document.getElementById("totalRecibidas"),
+  revision: document.getElementById("totalRevision"),
+  resueltas: document.getElementById("totalResueltas"),
+  contador: document.getElementById("contadorRegistros"),
+  buscar: document.getElementById("buscarSolicitud"),
+  filtro: document.getElementById("filtroEstado"),
+  tabla: document.getElementById("tablaSolicitudes")
+};
 
-const ESTADOS_SOLICITUD = {
+let solicitudes = [];
+let funcionarios = [];
+let categorias = [];
+let asignaciones = [];
+let cargando = false;
+
+function mostrarMensaje(texto, tipo = "info") {
+  elementos.mensaje.textContent = texto;
+  elementos.mensaje.className = `alert alert-${tipo}`;
+  elementos.mensaje.classList.remove("d-none");
+}
+
+function ocultarMensaje() {
+  elementos.mensaje.textContent = "";
+  elementos.mensaje.className = "alert d-none";
+}
+
+function nombreCompleto(perfil) {
+  const nombre = [
+    perfil.nombres || "",
+    perfil.apellidos || ""
+  ].join(" ").trim();
+
+  return nombre || perfil.correo || "Usuario sin nombre";
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return "—";
+
+  const valor = new Date(fecha);
+
+  if (Number.isNaN(valor.getTime())) return "—";
+
+  return valor.toLocaleString("es-CO", {
+    dateStyle: "short",
+    timeStyle: "short"
+  });
+}
+
+function nombreEstado(estado) {
+  const estados = {
     recibida: "Recibida",
     en_revision: "En revisión",
     pendiente_informacion: "Pendiente de información",
     resuelta: "Resuelta",
     cerrada: "Cerrada"
-};
+  };
 
-
-/* ==========================================
-   INICIO Y VALIDACIÓN DEL ADMINISTRADOR
-   ========================================== */
-
-async function iniciarAdministracion() {
-    clienteAdmin = window.supabaseClient;
-
-    if (!clienteAdmin) {
-        mostrarMensaje(
-            "No se pudo conectar con Supabase. Revisa supabase.js.",
-            "danger"
-        );
-        return;
-    }
-
-    const { data, error } = await clienteAdmin.auth.getSession();
-
-    if (error || !data?.session) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    usuarioAdmin = data.session.user;
-
-    const { data: perfil, error: errorPerfil } = await clienteAdmin
-        .from("perfiles")
-        .select("id, nombres, apellidos, correo, rol")
-        .eq("id", usuarioAdmin.id)
-        .single();
-
-    if (errorPerfil || perfil?.rol !== "administrador") {
-        mostrarMensaje(
-            "No tienes permisos para acceder al módulo administrativo.",
-            "danger"
-        );
-        return;
-    }
-
-    configurarEncabezado(perfil);
-    configurarEventos();
-
-    await cargarDatosAdmin();
+  return estados[estado] || estado || "Sin estado";
 }
 
-
-function configurarEncabezado(perfil) {
-    const nombre = [
-        perfil.nombres || "",
-        perfil.apellidos || ""
-    ].join(" ").trim();
-
-    const encabezado = document.querySelector(".admin-user-info strong");
-
-    if (encabezado) {
-        encabezado.textContent = nombre || "Administrador";
-    }
+function crearCelda(texto) {
+  const celda = document.createElement("td");
+  celda.textContent = texto ?? "—";
+  return celda;
 }
 
-
-/* ==========================================
-   EVENTOS DE LA INTERFAZ
-   ========================================== */
-
-function configurarEventos() {
-    const botonCerrar = document.getElementById("btnCerrarSesion");
-    const botonActualizar = document.getElementById("btnActualizarAdmin");
-    const buscador = document.getElementById("buscarAdmin");
-    const filtroEstado = document.getElementById("estadoAdmin");
-
-    if (botonCerrar) {
-        botonCerrar.addEventListener("click", cerrarSesion);
-    }
-
-    if (botonActualizar) {
-        botonActualizar.addEventListener("click", cargarDatosAdmin);
-    }
-
-    if (buscador) {
-        buscador.addEventListener("input", mostrarSolicitudesAdmin);
-    }
-
-    if (filtroEstado) {
-        filtroEstado.addEventListener("change", mostrarSolicitudesAdmin);
-    }
+function buscarCategoria(id) {
+  return categorias.find(categoria => categoria.id === id);
 }
 
-
-async function cerrarSesion() {
-    if (!clienteAdmin) return;
-
-    const { error } = await clienteAdmin.auth.signOut();
-
-    if (error) {
-        mostrarMensaje(
-            "No fue posible cerrar la sesión. Intenta nuevamente.",
-            "danger"
-        );
-        return;
-    }
-
-    window.location.href = "login.html";
+function buscarFuncionario(id) {
+  return funcionarios.find(funcionario => funcionario.id === id);
 }
 
-
-/* ==========================================
-   CARGA DE INFORMACIÓN
-   ========================================== */
-
-async function cargarDatosAdmin() {
-    if (!clienteAdmin) return;
-
-    mostrarMensaje("Cargando información administrativa...", "info");
-
-    const botonActualizar = document.getElementById("btnActualizarAdmin");
-
-    if (botonActualizar) {
-        botonActualizar.disabled = true;
-    }
-
-    try {
-        const [
-            resultadoSolicitudes,
-            resultadoPerfiles,
-            resultadoCategorias,
-            resultadoAsignaciones
-        ] = await Promise.all([
-            clienteAdmin
-                .from("solicitudes")
-                .select(`
-                    id,
-                    radicado,
-                    estudiante_id,
-                    categoria_id,
-                    asunto,
-                    descripcion,
-                    estado,
-                    created_at,
-                    updated_at
-                `)
-                .order("created_at", { ascending: false }),
-
-            clienteAdmin
-                .from("perfiles")
-                .select("id, nombres, apellidos, correo, rol"),
-
-            clienteAdmin
-                .from("categorias")
-                .select("id, nombre"),
-
-            clienteAdmin
-                .from("asignaciones")
-                .select("id, solicitud_id, funcionario_id, asignado_por, created_at")
-        ]);
-
-        const errorPrincipal =
-            resultadoSolicitudes.error ||
-            resultadoPerfiles.error ||
-            resultadoCategorias.error;
-
-        if (errorPrincipal) {
-            console.error(
-                "Error al cargar datos administrativos:",
-                errorPrincipal
-            );
-
-            mostrarMensaje(
-                "No fue posible cargar las solicitudes. Verifica las políticas de acceso de Supabase.",
-                "danger"
-            );
-            return;
-        }
-
-        solicitudesAdmin = resultadoSolicitudes.data || [];
-        perfilesAdmin = resultadoPerfiles.data || [];
-        categoriasAdmin = resultadoCategorias.data || [];
-
-        if (resultadoAsignaciones.error) {
-            console.error(
-                "No fue posible consultar las asignaciones:",
-                resultadoAsignaciones.error
-            );
-
-            asignacionesAdmin = [];
-
-            actualizarMetricasAdmin();
-            llenarFiltroEstados();
-            mostrarSolicitudesAdmin();
-
-            mostrarMensaje(
-                "Las solicitudes se cargaron, pero no fue posible consultar los funcionarios asignados. Revisa los permisos de la tabla asignaciones.",
-                "warning"
-            );
-
-            return;
-        }
-
-        asignacionesAdmin = resultadoAsignaciones.data || [];
-
-        actualizarMetricasAdmin();
-        llenarFiltroEstados();
-        mostrarSolicitudesAdmin();
-
-        mostrarMensaje(
-            `Se cargaron ${solicitudesAdmin.length} solicitudes correctamente.`,
-            "success"
-        );
-
-    } catch (error) {
-        console.error("Error inesperado:", error);
-
-        mostrarMensaje(
-            "Ocurrió un error inesperado al cargar la administración.",
-            "danger"
-        );
-
-    } finally {
-        if (botonActualizar) {
-            botonActualizar.disabled = false;
-        }
-    }
+function buscarAsignacion(idSolicitud) {
+  return asignaciones.find(
+    asignacion => asignacion.solicitud_id === idSolicitud
+  );
 }
 
+function crearSelectFuncionario(solicitud, asignacionActual) {
+  const contenedor = document.createElement("div");
+  contenedor.className = "d-flex flex-column gap-2";
 
-/* ==========================================
-   INDICADORES
-   ========================================== */
-
-function actualizarMetricasAdmin() {
-    asignarTexto("totalSolicitudesAdmin", solicitudesAdmin.length);
-
-    asignarTexto(
-        "recibidasAdmin",
-        solicitudesAdmin.filter(s => s.estado === "recibida").length
+  if (asignacionActual) {
+    const funcionario = buscarFuncionario(
+      asignacionActual.funcionario_id
     );
 
-    asignarTexto(
-        "revisionAdmin",
-        solicitudesAdmin.filter(s => s.estado === "en_revision").length
-    );
+    const nombre = funcionario
+      ? nombreCompleto(funcionario)
+      : "Funcionario asignado";
 
-    asignarTexto(
-        "resueltasAdmin",
-        solicitudesAdmin.filter(s => s.estado === "resuelta").length
-    );
-}
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "fw-semibold";
+    etiqueta.textContent = nombre;
 
+    const nota = document.createElement("small");
+    nota.className = "text-muted";
+    nota.textContent = "Esta solicitud ya tiene una asignación.";
 
-/* ==========================================
-   FILTROS
-   ========================================== */
+    contenedor.append(etiqueta, nota);
+    return contenedor;
+  }
 
-function llenarFiltroEstados() {
-    const filtro = document.getElementById("estadoAdmin");
+  if (funcionarios.length === 0) {
+    const aviso = document.createElement("span");
+    aviso.className = "text-danger small";
+    aviso.textContent = "No hay funcionarios disponibles.";
+    contenedor.appendChild(aviso);
+    return contenedor;
+  }
 
-    if (!filtro) return;
+  const selector = document.createElement("select");
+  selector.className = "form-select form-select-sm";
+  selector.setAttribute("aria-label", "Seleccionar funcionario");
 
-    const valorActual = filtro.value;
+  const opcionInicial = document.createElement("option");
+  opcionInicial.value = "";
+  opcionInicial.textContent = "Selecciona un funcionario";
+  selector.appendChild(opcionInicial);
 
-    filtro.replaceChildren();
+  funcionarios.forEach(funcionario => {
+    const opcion = document.createElement("option");
+    opcion.value = funcionario.id;
+    opcion.textContent = nombreCompleto(funcionario);
+    selector.appendChild(opcion);
+  });
 
-    const opcionTodos = document.createElement("option");
-    opcionTodos.value = "";
-    opcionTodos.textContent = "Todos los estados";
-    filtro.appendChild(opcionTodos);
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "btn btn-primary btn-sm";
+  boton.textContent = "Asignar funcionario";
 
-    Object.entries(ESTADOS_SOLICITUD).forEach(([valor, nombre]) => {
-        const opcion = document.createElement("option");
-        opcion.value = valor;
-        opcion.textContent = nombre;
-        filtro.appendChild(opcion);
-    });
+  boton.addEventListener("click", async () => {
+    const funcionarioId = selector.value;
 
-    filtro.value = Object.hasOwn(ESTADOS_SOLICITUD, valorActual)
-        ? valorActual
-        : "";
-}
-
-
-/* ==========================================
-   MOSTRAR SOLICITUDES
-   ========================================== */
-
-function mostrarSolicitudesAdmin() {
-    const tabla = document.getElementById("tablaSolicitudesAdmin");
-
-    if (!tabla) return;
-
-    const busqueda = (
-        document.getElementById("buscarAdmin")?.value || ""
-    ).trim().toLowerCase();
-
-    const estadoSeleccionado =
-        document.getElementById("estadoAdmin")?.value || "";
-
-    const filtradas = solicitudesAdmin.filter(solicitud => {
-        const estudiante = buscarPerfil(solicitud.estudiante_id);
-        const categoria = buscarCategoria(solicitud.categoria_id);
-        const asignacion = buscarAsignacion(solicitud.id);
-        const funcionario = asignacion
-            ? buscarPerfil(asignacion.funcionario_id)
-            : null;
-
-        const nombreEstudiante = estudiante
-            ? `${estudiante.nombres || ""} ${estudiante.apellidos || ""}`
-            : "";
-
-        const nombreFuncionario = funcionario
-            ? `${funcionario.nombres || ""} ${funcionario.apellidos || ""}`
-            : "";
-
-        const texto = [
-            solicitud.radicado,
-            solicitud.asunto,
-            solicitud.descripcion,
-            nombreEstudiante,
-            estudiante?.correo,
-            categoria?.nombre,
-            nombreFuncionario,
-            funcionario?.correo
-        ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-
-        return texto.includes(busqueda) &&
-            (!estadoSeleccionado || solicitud.estado === estadoSeleccionado);
-    });
-
-    tabla.replaceChildren();
-
-    if (filtradas.length === 0) {
-        const fila = document.createElement("tr");
-        const celda = document.createElement("td");
-
-        celda.colSpan = 7;
-        celda.className = "admin-empty";
-        celda.textContent =
-            "No se encontraron solicitudes con los filtros seleccionados.";
-
-        fila.appendChild(celda);
-        tabla.appendChild(fila);
-    } else {
-        filtradas.forEach(solicitud => {
-            tabla.appendChild(crearFilaSolicitud(solicitud));
-        });
+    if (!funcionarioId) {
+      mostrarMensaje(
+        "Selecciona un funcionario antes de asignar la solicitud.",
+        "warning"
+      );
+      return;
     }
 
-    asignarTexto("contadorAdmin", filtradas.length);
+    if (cargando) return;
 
-    const sinResultados = document.getElementById("sinResultadosAdmin");
+    const funcionarioElegido = buscarFuncionario(funcionarioId);
 
-    if (sinResultados) {
-        sinResultados.classList.toggle("d-none", filtradas.length > 0);
+    if (!funcionarioElegido) {
+      mostrarMensaje(
+        "El funcionario seleccionado no está disponible. Actualiza la información.",
+        "warning"
+      );
+      return;
     }
+
+    const confirmar = window.confirm(
+      `¿Deseas asignar la solicitud ${solicitud.radicado} a ` +
+      `${nombreCompleto(funcionarioElegido)}?`
+    );
+
+    if (!confirmar) return;
+
+    await asignarSolicitud(solicitud, funcionarioId, boton);
+  });
+
+  contenedor.append(selector, boton);
+  return contenedor;
 }
 
+function renderizarTabla() {
+  const busqueda = elementos.buscar.value.trim().toLowerCase();
+  const estadoSeleccionado = elementos.filtro.value;
 
-function crearFilaSolicitud(solicitud) {
+  const filtradas = solicitudes.filter(solicitud => {
+    const perfil = perfilesEstudiantes.get(solicitud.estudiante_id);
+    const categoria = buscarCategoria(solicitud.categoria_id);
+
+    const texto = [
+      solicitud.radicado,
+      perfil ? nombreCompleto(perfil) : "",
+      categoria?.nombre || "",
+      solicitud.asunto || "",
+      solicitud.descripcion || ""
+    ].join(" ").toLowerCase();
+
+    const coincideBusqueda = texto.includes(busqueda);
+    const coincideEstado =
+      !estadoSeleccionado || solicitud.estado === estadoSeleccionado;
+
+    return coincideBusqueda && coincideEstado;
+  });
+
+  elementos.tabla.replaceChildren();
+  elementos.contador.textContent = `Registros: ${filtradas.length}`;
+
+  if (filtradas.length === 0) {
+    const fila = document.createElement("tr");
+    const celda = crearCelda(
+      solicitudes.length
+        ? "No hay solicitudes que coincidan con los filtros."
+        : "Todavía no hay solicitudes registradas."
+    );
+
+    celda.colSpan = 7;
+    celda.className = "text-center text-muted py-4";
+    fila.appendChild(celda);
+    elementos.tabla.appendChild(fila);
+    return;
+  }
+
+  filtradas.forEach(solicitud => {
     const fila = document.createElement("tr");
 
-    const estudiante = buscarPerfil(solicitud.estudiante_id);
+    const estudiante = perfilesEstudiantes.get(solicitud.estudiante_id);
     const categoria = buscarCategoria(solicitud.categoria_id);
     const asignacion = buscarAsignacion(solicitud.id);
 
-    const nombreEstudiante = estudiante
-        ? `${estudiante.nombres || ""} ${estudiante.apellidos || ""}`.trim()
-        : "Estudiante no disponible";
-
-    agregarCelda(
-        fila,
-        solicitud.radicado || "Sin radicado",
-        "admin-radicado"
+    fila.appendChild(crearCelda(solicitud.radicado));
+    fila.appendChild(
+      crearCelda(estudiante ? nombreCompleto(estudiante) : "Estudiante")
     );
-
-    agregarCelda(fila, nombreEstudiante);
-    agregarCelda(fila, categoria?.nombre || "Sin categoría");
-    agregarCelda(fila, solicitud.asunto || "Sin asunto");
+    fila.appendChild(crearCelda(categoria?.nombre || "Sin categoría"));
+    fila.appendChild(crearCelda(solicitud.asunto || "Sin asunto"));
 
     const celdaEstado = document.createElement("td");
-    const etiquetaEstado = document.createElement("span");
-
-    etiquetaEstado.className =
-        `admin-status estado-${claseEstado(solicitud.estado)}`;
-
-    etiquetaEstado.textContent = formatearEstado(solicitud.estado);
-
-    celdaEstado.appendChild(etiquetaEstado);
+    const insignia = document.createElement("span");
+    insignia.className = "badge text-bg-secondary";
+    insignia.textContent = nombreEstado(solicitud.estado);
+    celdaEstado.appendChild(insignia);
     fila.appendChild(celdaEstado);
 
-    agregarCelda(fila, formatearFecha(solicitud.created_at));
+    fila.appendChild(crearCelda(formatearFecha(solicitud.created_at)));
 
-    const celdaAsignacion = document.createElement("td");
-
-    crearControlAsignacion(
-        celdaAsignacion,
-        solicitud,
-        asignacion
+    const celdaFuncionario = document.createElement("td");
+    celdaFuncionario.appendChild(
+      crearSelectFuncionario(solicitud, asignacion)
     );
+    fila.appendChild(celdaFuncionario);
 
-    fila.appendChild(celdaAsignacion);
-
-    return fila;
+    elementos.tabla.appendChild(fila);
+  });
 }
 
+const perfilesEstudiantes = new Map();
 
-/* ==========================================
-   ASIGNACIÓN DE FUNCIONARIOS
-   ========================================== */
+function actualizarResumen() {
+  elementos.total.textContent = solicitudes.length;
 
-function crearControlAsignacion(celda, solicitud, asignacion) {
-    const funcionarios = perfilesAdmin.filter(
-        perfil => perfil.rol === "funcionario"
+  elementos.recibidas.textContent = solicitudes.filter(
+    solicitud => solicitud.estado === "recibida"
+  ).length;
+
+  elementos.revision.textContent = solicitudes.filter(
+    solicitud => solicitud.estado === "en_revision"
+  ).length;
+
+  elementos.resueltas.textContent = solicitudes.filter(
+    solicitud => solicitud.estado === "resuelta"
+  ).length;
+}
+
+async function verificarAdministrador() {
+  const { data: sesionData, error: errorSesion } =
+    await cliente.auth.getSession();
+
+  if (errorSesion) throw errorSesion;
+
+  const usuario = sesionData.session?.user;
+
+  if (!usuario) {
+    window.location.href = "login.html";
+    return null;
+  }
+
+  const { data: perfil, error } = await cliente
+    .from("perfiles")
+    .select("id, nombres, apellidos, correo, rol")
+    .eq("id", usuario.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (!perfil || perfil.rol !== "administrador") {
+    mostrarMensaje(
+      "No tienes permisos para acceder al módulo administrativo.",
+      "danger"
     );
 
-    const funcionarioAsignado = asignacion
-        ? buscarPerfil(asignacion.funcionario_id)
-        : null;
+    await cliente.auth.signOut();
+    window.location.href = "login.html";
+    return null;
+  }
 
-    if (asignacion) {
-        const nombre = funcionarioAsignado
-            ? `${funcionarioAsignado.nombres || ""} ${funcionarioAsignado.apellidos || ""}`.trim()
-            : "Funcionario asignado";
+  elementos.nombreAdmin.textContent = nombreCompleto(perfil);
+  return usuario;
+}
 
-        const detalle = document.createElement("div");
-        detalle.className = "mb-2";
+async function cargarDatos() {
+  if (cargando) return;
 
-        const etiqueta = document.createElement("span");
-        etiqueta.className = "badge text-bg-success";
-        etiqueta.textContent = nombre;
+  cargando = true;
+  elementos.btnActualizar.disabled = true;
+  elementos.estadoCarga.textContent = "Consultando Supabase...";
+  ocultarMensaje();
 
-        detalle.appendChild(etiqueta);
-        celda.appendChild(detalle);
+  try {
+    const resultados = await Promise.all([
+      cliente
+        .from("solicitudes")
+        .select(
+          "id, radicado, estudiante_id, categoria_id, asunto, descripcion, estado, created_at"
+        )
+        .order("created_at", { ascending: false }),
 
-        const correo = document.createElement("small");
-        correo.className = "text-secondary d-block";
-        correo.textContent = funcionarioAsignado?.correo || "";
+      cliente
+        .from("perfiles")
+        .select("id, nombres, apellidos, correo, rol")
+        .eq("rol", "funcionario"),
 
-        celda.appendChild(correo);
+      cliente
+        .from("categorias")
+        .select("id, nombre, activa"),
 
-        const nota = document.createElement("small");
-        nota.className = "text-secondary d-block mt-1";
-        nota.textContent = "Solicitud asignada";
+      cliente
+        .from("asignaciones")
+        .select("id, solicitud_id, funcionario_id, asignado_por, created_at")
+    ]);
 
-        celda.appendChild(nota);
+    const nombresConsultas = [
+      "solicitudes",
+      "perfiles de funcionarios",
+      "categorías",
+      "asignaciones"
+    ];
 
-        return;
+    for (let i = 0; i < resultados.length; i++) {
+      if (resultados[i].error) {
+        console.error(
+          `Error consultando ${nombresConsultas[i]}:`,
+          resultados[i].error
+        );
+        throw new Error(
+          `No se pudo consultar ${nombresConsultas[i]}: ` +
+          resultados[i].error.message
+        );
+      }
     }
+
+    solicitudes = resultados[0].data || [];
+    funcionarios = resultados[1].data || [];
+    categorias = (resultados[2].data || []).filter(
+      categoria => categoria.activa !== false
+    );
+    asignaciones = resultados[3].data || [];
+
+    const idsEstudiantes = [
+      ...new Set(solicitudes.map(solicitud => solicitud.estudiante_id))
+    ].filter(Boolean);
+
+    perfilesEstudiantes.clear();
+
+    if (idsEstudiantes.length > 0) {
+      const { data: estudiantes, error: errorEstudiantes } = await cliente
+        .from("perfiles")
+        .select("id, nombres, apellidos, correo, rol")
+        .in("id", idsEstudiantes);
+
+      if (errorEstudiantes) {
+        console.error("Error consultando estudiantes:", errorEstudiantes);
+        throw new Error(
+          "No se pudieron consultar los perfiles de los estudiantes: " +
+          errorEstudiantes.message
+        );
+      }
+
+      (estudiantes || []).forEach(estudiante => {
+        perfilesEstudiantes.set(estudiante.id, estudiante);
+      });
+    }
+
+    actualizarResumen();
+    renderizarTabla();
+
+    elementos.estadoCarga.textContent =
+      `Se cargaron ${solicitudes.length} solicitudes y ` +
+      `${funcionarios.length} funcionarios.`;
 
     if (funcionarios.length === 0) {
-        const nota = document.createElement("span");
-        nota.className = "text-secondary";
-        nota.textContent = "No hay funcionarios registrados";
-        celda.appendChild(nota);
-        return;
+      mostrarMensaje(
+        "Las solicitudes se cargaron, pero no se encontraron funcionarios. " +
+        "Verifica que exista al menos un perfil con rol exactamente igual a " +
+        "'funcionario' y que el administrador tenga permiso para consultar perfiles.",
+        "warning"
+      );
+    } else {
+      mostrarMensaje(
+        "Información cargada correctamente. Funcionarios disponibles: " +
+        funcionarios.length + ".",
+        "success"
+      );
     }
+  } catch (error) {
+    console.error("Error al cargar administración:", error);
 
-    const contenedor = document.createElement("div");
-    contenedor.className = "d-grid gap-2";
+    elementos.estadoCarga.textContent = "No se pudo cargar toda la información.";
 
-    const selector = document.createElement("select");
-    selector.className = "form-select admin-assignment-select";
-    selector.setAttribute(
-        "aria-label",
-        `Seleccionar funcionario para ${solicitud.radicado || "la solicitud"}`
+    mostrarMensaje(
+      error.message || "Ocurrió un error al consultar Supabase.",
+      "danger"
     );
 
-    const opcionInicial = document.createElement("option");
-    opcionInicial.value = "";
-    opcionInicial.textContent = "Seleccionar funcionario";
-    selector.appendChild(opcionInicial);
+    elementos.tabla.replaceChildren();
 
-    funcionarios.forEach(funcionario => {
-        const opcion = document.createElement("option");
-        opcion.value = funcionario.id;
-
-        const nombre = [
-            funcionario.nombres || "",
-            funcionario.apellidos || ""
-        ].join(" ").trim();
-
-        opcion.textContent = nombre || funcionario.correo;
-
-        selector.appendChild(opcion);
-    });
-
-    const boton = document.createElement("button");
-    boton.type = "button";
-    boton.className = "admin-button";
-    boton.innerHTML = '<i class="bi bi-person-check"></i> Asignar';
-
-    boton.addEventListener("click", async () => {
-        const funcionarioId = selector.value;
-
-        if (!funcionarioId) {
-            mostrarMensaje(
-                "Selecciona un funcionario antes de asignar la solicitud.",
-                "warning"
-            );
-            return;
-        }
-
-        const funcionarioValido = funcionarios.some(
-            funcionario => funcionario.id === funcionarioId
-        );
-
-        if (!funcionarioValido) {
-            mostrarMensaje(
-                "El funcionario seleccionado no es válido.",
-                "danger"
-            );
-            return;
-        }
-
-        await asignarSolicitud(
-            solicitud.id,
-            funcionarioId,
-            boton,
-            selector
-        );
-    });
-
-    contenedor.appendChild(selector);
-    contenedor.appendChild(boton);
-    celda.appendChild(contenedor);
-}
-
-
-async function asignarSolicitud(
-    solicitudId,
-    funcionarioId,
-    boton,
-    selector
-) {
-    if (!clienteAdmin || !usuarioAdmin) return;
-
-    boton.disabled = true;
-    selector.disabled = true;
-    boton.textContent = "Asignando...";
-
-    try {
-        /*
-         * Verificamos de nuevo que no exista una asignación.
-         * Esto evita duplicar asignaciones desde esta interfaz.
-         */
-        const { data: existentes, error: errorConsulta } = await clienteAdmin
-            .from("asignaciones")
-            .select("id, funcionario_id")
-            .eq("solicitud_id", solicitudId);
-
-        if (errorConsulta) {
-            console.error("Error al verificar asignaciones:", errorConsulta);
-
-            mostrarMensaje(
-                "No se pudo verificar si la solicitud ya tiene un responsable. Revisa los permisos de asignaciones.",
-                "danger"
-            );
-            return;
-        }
-
-        if (existentes && existentes.length > 0) {
-            mostrarMensaje(
-                "Esta solicitud ya tiene una asignación. Actualiza la información antes de continuar.",
-                "warning"
-            );
-
-            await cargarDatosAdmin();
-            return;
-        }
-
-        const { error: errorInsertar } = await clienteAdmin
-            .from("asignaciones")
-            .insert({
-                solicitud_id: solicitudId,
-                funcionario_id: funcionarioId,
-                asignado_por: usuarioAdmin.id
-            });
-
-        if (errorInsertar) {
-            console.error("Error al asignar solicitud:", errorInsertar);
-
-            mostrarMensaje(
-                "No se pudo asignar la solicitud. Verifica los permisos de inserción y las relaciones de la tabla asignaciones.",
-                "danger"
-            );
-            return;
-        }
-
-        mostrarMensaje(
-            "Solicitud asignada correctamente al funcionario.",
-            "success"
-        );
-
-        await cargarDatosAdmin();
-
-    } catch (error) {
-        console.error("Error inesperado al asignar:", error);
-
-        mostrarMensaje(
-            "Ocurrió un error inesperado al asignar la solicitud.",
-            "danger"
-        );
-
-    } finally {
-        boton.disabled = false;
-        selector.disabled = false;
-        boton.innerHTML = '<i class="bi bi-person-check"></i> Asignar';
-    }
-}
-
-
-/* ==========================================
-   BÚSQUEDA DE INFORMACIÓN RELACIONADA
-   ========================================== */
-
-function buscarPerfil(perfilId) {
-    return perfilesAdmin.find(perfil => perfil.id === perfilId) || null;
-}
-
-
-function buscarCategoria(categoriaId) {
-    return categoriasAdmin.find(
-        categoria => String(categoria.id) === String(categoriaId)
-    ) || null;
-}
-
-
-function buscarAsignacion(solicitudId) {
-    return asignacionesAdmin.find(
-        asignacion => asignacion.solicitud_id === solicitudId
-    ) || null;
-}
-
-
-/* ==========================================
-   FUNCIONES AUXILIARES
-   ========================================== */
-
-function agregarCelda(fila, contenido, clase = "") {
-    const celda = document.createElement("td");
-
-    celda.textContent = contenido ?? "";
-
-    if (clase) {
-        celda.className = clase;
-    }
-
+    const fila = document.createElement("tr");
+    const celda = crearCelda(
+      "No se pudieron cargar los datos. Revisa el mensaje anterior."
+    );
+    celda.colSpan = 7;
+    celda.className = "text-center text-danger py-4";
     fila.appendChild(celda);
+    elementos.tabla.appendChild(fila);
+  } finally {
+    cargando = false;
+    elementos.btnActualizar.disabled = false;
+  }
 }
 
+async function asignarSolicitud(solicitud, funcionarioId, boton) {
+  boton.disabled = true;
+  boton.textContent = "Asignando...";
+  ocultarMensaje();
 
-function asignarTexto(id, valor) {
-    const elemento = document.getElementById(id);
+  try {
+    // Verificar que la solicitud no haya sido asignada previamente.
+    const { data: existentes, error: errorExistentes } = await cliente
+      .from("asignaciones")
+      .select("id, funcionario_id")
+      .eq("solicitud_id", solicitud.id);
 
-    if (elemento) {
-        elemento.textContent = String(valor);
-    }
-}
-
-
-function formatearEstado(estado) {
-    if (!estado) return "Sin estado";
-
-    return ESTADOS_SOLICITUD[estado] ||
-        estado.replace(/_/g, " ").replace(/\b\w/g, letra =>
-            letra.toUpperCase()
-        );
-}
-
-
-function claseEstado(estado) {
-    return Object.hasOwn(ESTADOS_SOLICITUD, estado)
-        ? estado
-        : "cerrada";
-}
-
-
-function formatearFecha(fecha) {
-    if (!fecha) return "Sin fecha";
-
-    const fechaValida = new Date(fecha);
-
-    if (Number.isNaN(fechaValida.getTime())) {
-        return "Fecha no disponible";
+    if (errorExistentes) {
+      throw new Error(
+        "No se pudo verificar si la solicitud ya está asignada: " +
+        errorExistentes.message
+      );
     }
 
-    return fechaValida.toLocaleString("es-CO", {
-        dateStyle: "short",
-        timeStyle: "short"
-    });
+    if (existentes && existentes.length > 0) {
+      await cargarDatos();
+
+      mostrarMensaje(
+        "Esta solicitud ya tiene una asignación. Se actualizó la información.",
+        "warning"
+      );
+      return;
+    }
+
+    const { data: usuarioData, error: errorUsuario } =
+      await cliente.auth.getUser();
+
+    if (errorUsuario) throw errorUsuario;
+
+    const usuario = usuarioData.user;
+
+    if (!usuario) {
+      throw new Error("La sesión expiró. Inicia sesión nuevamente.");
+    }
+
+    const { error: errorInsertar } = await cliente
+      .from("asignaciones")
+      .insert({
+        solicitud_id: solicitud.id,
+        funcionario_id: funcionarioId,
+        asignado_por: usuario.id
+      });
+
+    if (errorInsertar) {
+      console.error("Error de Supabase al asignar:", errorInsertar);
+
+      throw new Error(
+        "Supabase no permitió guardar la asignación: " +
+        errorInsertar.message +
+        (errorInsertar.code ? ` (código ${errorInsertar.code})` : "")
+      );
+    }
+
+    await cargarDatos();
+
+    mostrarMensaje(
+      `La solicitud ${solicitud.radicado} fue asignada correctamente.`,
+      "success"
+    );
+  } catch (error) {
+    console.error("Error al asignar funcionario:", error);
+
+    mostrarMensaje(
+      error.message || "No se pudo asignar el funcionario.",
+      "danger"
+    );
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Asignar funcionario";
+  }
 }
 
+async function cerrarSesion() {
+  elementos.btnCerrarSesion.disabled = true;
 
-function mostrarMensaje(texto, tipo = "info") {
-    const mensaje = document.getElementById("mensajeAdmin");
+  const { error } = await cliente.auth.signOut();
 
-    if (!mensaje) return;
+  if (error) {
+    console.error("Error al cerrar sesión:", error);
+    mostrarMensaje(
+      "No se pudo cerrar la sesión: " + error.message,
+      "danger"
+    );
+    elementos.btnCerrarSesion.disabled = false;
+    return;
+  }
 
-    mensaje.className = `alert alert-${tipo}`;
-    mensaje.textContent = texto;
-    mensaje.classList.remove("d-none");
+  window.location.href = "login.html";
 }
 
+async function iniciarModulo() {
+  if (!cliente) {
+    mostrarMensaje(
+      "No se encontró el cliente de Supabase. Revisa el orden de los scripts en el HTML.",
+      "danger"
+    );
+    return;
+  }
 
-/* ==========================================
-   FUNCIONES DISPONIBLES PARA LA INTERFAZ
-   ========================================== */
+  try {
+    const usuario = await verificarAdministrador();
 
-window.mostrarSolicitudesAdmin = mostrarSolicitudesAdmin;
-window.cargarDatosAdmin = cargarDatosAdmin;
+    if (!usuario) return;
 
+    elementos.btnActualizar.addEventListener("click", cargarDatos);
+    elementos.buscar.addEventListener("input", renderizarTabla);
+    elementos.filtro.addEventListener("change", renderizarTabla);
+    elementos.btnCerrarSesion.addEventListener("click", cerrarSesion);
+
+    await cargarDatos();
+  } catch (error) {
+    console.error("Error al iniciar el módulo:", error);
+
+    mostrarMensaje(
+      "No se pudo iniciar el módulo administrativo: " +
+      error.message,
+      "danger"
+    );
+
+    elementos.estadoCarga.textContent = "Error de inicio.";
+  }
+}
+
+iniciarModulo();
+```
