@@ -1,4 +1,3 @@
-```javascript
 /* ==========================================
    ACADÉMICO FÁCIL
    MÓDULO DE ADMINISTRACIÓN
@@ -731,4 +730,4 @@ function mostrarMensaje(texto, tipo = "info") {
 
 window.mostrarSolicitudesAdmin = mostrarSolicitudesAdmin;
 window.cargarDatosAdmin = cargarDatosAdmin;
-```
+
